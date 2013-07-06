@@ -17,7 +17,7 @@ Here's the list of posts (the series is now finished):
 5. "[%](*frustum_culling_turning_crank)" --- on the other hand, if you do have the time and energy, might as well do it properly.
 6. "[%](*barycentric_conspiracy)" is a lead-in to some in-depth posts on the triangle rasterizer that's at the heart of Intel's demo. It's also a gripping tale of triangles, Möbius, and a plot centuries in the making.
 7. "[%](*tri_rast_in_practice)" --- how to build your own precise triangle rasterizer and *not* die trying.
-8. <a href="http://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/">"Optimizing the basic rasterizer"</a>, because this is real time, not amateur hour.
+8. "[%](*optimizing_basic_rasterizer)", because this is real time, not amateur hour.
 9. <a href="http://fgiesen.wordpress.com/2013/02/11/depth-buffers-done-quick-part/">"Depth buffers done quick, part 1"</a> - at last, looking at (and optimizing) the depth buffer rasterizer in Intel's example.
 10. <a href="http://fgiesen.wordpress.com/2013/02/16/depth-buffers-done-quick-part-2/">"Depth buffers done quick, part 2"</a> - optimizing some more!
 11. <a href="http://fgiesen.wordpress.com/2013/02/17/care-and-feeding-of-worker-threads-part-1/">"The care and feeding of worker threads, part 1"</a> - this project uses multi-threading; time to look into what these threads are actually doing.
