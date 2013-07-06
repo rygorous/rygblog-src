@@ -1,0 +1,313 @@
+// vim:filetype=css:sw=2:et
+@banner:        #443b31;
+@background:    #f9f7f5;
+@text:          #444;
+@link:          #4265a7;
+@linkhover:     #933;
+@nav-bg:        darken(@background,10%);
+@nav-bg-active: @background;
+@nav-left:      #888;
+@nav-right:     #777;
+@nav-bot:       #888;
+@rule:          lighten(@text,30%);
+
+@bannersize:        40px;
+@contentwidth:      700px;
+@contentpad:        15px;
+@sidebarmargin:     @contentpad;
+@sidebarwidth:      250px;
+@minsidebar:        (@contentwidth + 4*@contentpad + @sidebarwidth);
+
+@font-face {
+  font-family: 'Droid Serif';
+  font-weight: normal;
+  font-style: normal;
+  src: url('DroidSerif.woff') format('woff'),
+       url('DroidSerif.svg#DroidSerif') format('svg');
+}
+
+@font-face {
+  font-family: 'Droid Serif';
+  font-weight: normal;
+  font-style: italic;
+  src: url('DroidSerif-Italic.woff') format('woff'),
+       url('DroidSerif-Italic.svg#DroidSerifItalic') format('svg');
+}
+
+@font-face {
+  font-family: 'Signika';
+  src: url('Signika-Regular.woff') format('woff'),
+       url('Signika-Regular.swf#Signika') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body, h1, h2 {
+  margin: 0;
+  font: inherit;
+}
+
+body {
+  background-color: @background;
+  color: @text;
+  font-family: 'Droid Serif', Georgia, serif;
+  font-size: 15px;
+  line-height: 1.5em;
+}
+
+a { text-decoration: none; }
+a:link, a:visited { color: @link; }
+a:hover, a:active { color: @linkhover; }
+a:active { outline: none; }
+
+.displayfont {
+  font-family: Signika, sans-serif;
+  font-weight: normal;
+}
+
+hr {
+  margin: 3em auto;
+  width: 80%;
+  border: 0;
+  border-top: 1px solid @rule;
+}
+
+h1 {
+  .displayfont;
+  font-size: 180%;
+  margin-bottom: 1em;
+}
+
+h2 {
+  .displayfont;
+  font-size: 150%;
+}
+
+h3 {
+  .displayfont;
+  font-size: 130%;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 1em auto;
+}
+
+tr {
+  padding: 0;
+}
+
+th, thead td {
+  font-weight: bold;
+  padding: 0;
+  border-bottom: 1px solid black;
+  padding: 0 .6em;
+}
+
+td {
+  padding: 0 .6em;
+}
+
+td.num {
+  text-align: right;
+}
+
+a > img {
+  border: none;
+}
+
+code, pre {
+  font-family: Consolas, Monaco, 'Andale Mono', monospace;
+}
+
+pre {
+  background-color: darken(@background,5%);
+  font-size: 85%;
+}
+
+blockquote {
+  display: block;
+  margin: 1em 0 1em 1em;
+  padding: 0 0 0 1em;
+  border-left: 2px solid @rule;
+  font-style: italic;
+}
+
+article {
+  ul, ol {
+    li {
+      margin: .4em 0;
+    }
+  }
+  img {
+    display: block;
+    margin: 0 auto;
+  }
+  img.inline {
+    display: inline;
+    margin: 0;
+  }
+  img.floatleft {
+    display: block;
+    float: left;
+    margin: 1em 1em 1em 0;
+  }
+  img.floatright {
+    display: block;
+    float: right;
+    margin: 1em 0 1em 1em;
+  }
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 0 @contentpad;
+}
+
+body > div.content {
+  padding-bottom: 3em;
+}
+
+body > header {
+  background: @banner;
+  .displayfont;
+  padding: .3em 0;
+
+  h1 {
+    display: inline-block;
+    margin: 0;
+    color: @background;
+    line-height: 1.3em;
+    font-size: @bannersize;
+  }
+  h2 {
+    display: inline-block;
+    margin: 0;
+    color: darken(@background, 20%);
+    font-size: (0.5*@bannersize);
+    margin-left: 1em;
+  }
+}
+
+body > nav {
+  background-color: @nav-bg;
+  border-bottom: 1px solid @nav-bot;
+  ul { display: none; }
+  @media only screen {
+    ul {
+      .container;
+      display: block;
+      list-style-type: none;
+      padding: 0;
+      li {
+        display: table-cell;
+        padding: .3em .5em .3em .5em;
+        a, a:link, a:visited { color: @text; }
+        a:hover { color: @linkhover; }
+      }
+      li.active, li:hover { background-color: @nav-bg-active; }
+      li + li {
+        border-left: 1px solid @nav-left;
+      }
+      #search {
+        margin: 0;
+        padding: 0;
+        border: none;
+      }
+    }
+  }
+}
+
+body > footer {
+  display: none;
+  @media only screen {
+    .container;
+    display: block;
+    clear: both;
+    padding-top: 1em;
+    > p {
+      color: lighten(@text,30%);
+      padding: .5em 0;
+      border-top: 1px solid @rule;
+    }
+  }
+}
+
+article {
+  page-break-before: always;
+}
+
+article > header > time { color: lighten(@text,30%); }
+
+#content {
+  padding-top: 1em;
+  width: @contentwidth;
+  position: relative;
+  > div {
+    float: left;
+  }
+}
+
+#posts {
+  width: @contentwidth;
+}
+
+#posts nav {
+  margin-top: 4em;
+  .next {
+    float: left;
+    width: 45%;
+    text-align: left;
+  }
+  .prev {
+    float: right;
+    width: 45%;
+    text-align: right;
+  }
+}
+
+#sidebar {
+  display: none;
+  @media only screen {
+    display: block;
+    font-size: 90%;
+    padding-top: 1em;
+    section h1 {
+      font-size: 120%;
+    }
+    section {
+      margin-bottom: 1.5em;
+    }
+    section + section {
+      padding-top: .5em;
+    }
+    ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+  }
+  @media only screen and (min-width: @minsidebar) {
+    clear: none;
+    float: left;
+    width: @sidebarwidth;
+    margin: 0 0 0 (@sidebarmargin - 1px);
+    border-left: 1px solid @rule;
+    section {
+      padding-left: 2em;
+      text-indent: -1em;
+    }
+  }
+}
+
+@media only screen and (max-width: (@minsidebar - 1px)) {
+  #content {
+    overflow: hidden;
+  }
+  #sidebar {
+    margin-top: 1em;
+    border-top: 1px solid @rule;
+  }
+}
+

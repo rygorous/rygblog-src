@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="{{.Blog.Author}}">
+    <meta name="viewport" content="width=1024">
+    <link rel="stylesheet" href="static/style.css" type="text/css">
+    <link rel="alternate" href="{{.Blog.AtomFeedFile}}" type="application/atom+xml">
+    {{if .Post.MathJax}}<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>{{end}}
+    {{if .Post.BlockCode}}<link rel="stylesheet" href="static/prism.css" type="text/css">
+    <script src="static/prism.js" type="text/javascript"></script>
+    {{end}}<title>{{.Blog.Title}}: {{.Post.Title}}</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>{{.Blog.Title}}</h1>
+        <h2>{{.Blog.Tagline}}</h2>
+      </div>
+    </header>
+    <nav>
+      <div class="container">
+        <ul>
+          <li{{if not .Post.PageName}} class="active"{{end}}><a href="{{.Blog.MostRecent.Href}}">Blog</a></li>{{range .Blog.Pages}}
+          <li{{if .Active}} class="active"{{end}}><a href="{{.Href}}">{{.Title}}</a></li>{{end}}
+          <li><a href="{{.Blog.AtomFeedFile}}">Subscribe&nbsp;<img src="static/feed-icon.png" width=14 height=14 alt="Feed"></a>
+          <li>
+            <form action="http://google.com/search" method="get">
+              <fieldset id="search">
+                <input type="hidden" name="q" value="site:{{.Blog.Hostname}}"/>
+                <input type="text" name="q" placeholder="Search"/>
+              </fieldset>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container">
+      <div id="content">
+        <div id="posts">
+          <article>
+            <header>{{if not .Post.Published.IsZero}}
+              <time>{{with .Post.Published}}{{printf "%d-%02d-%02d" .Year .Month .Day}}{{end}}</time>{{end}}
+              <h1><a href="{{.Post.Href}}">{{.Post.Title}}</a></h1>
+            </header>
+            {{with .Post.Parent}}<p><em>This post is part of the series &ldquo;<a href="{{.Href}}">{{.Title}}</a>&rdquo;.</em></p>{{end}}
+            {{.Post.Content}}
+          </article>
+          <nav>
+            {{with .Next}}<div class="next"><a href="{{.Href}}">Newer: {{.Title}}</a></div>{{end}}
+            {{with .Prev}}<div class="prev"><a href="{{.Href}}">Older: {{.Title}}</a></div>{{end}}
+          </nav>
+        </div>
+      </div>
+      <aside id="sidebar">
+        <section>
+          <h1>Recent posts</h1>
+          <ul id="recentposts">{{range .Recent}}
+            <li><a href="{{.Href}}">{{.Title}}</a></li>{{end}}
+          </ul>
+        </section>
+        {{with .Blog}}<section>
+          <h1>Series</h1>
+          <ul id="series">{{range .Series}}
+            <li><a href="{{.Href}}">{{.Title}}</a></li>{{end}}
+          </ul>
+        </section>{{end}}
+      </aside>
+    </div>
+    <footer>
+    <p>All content &copy; 2009&ndash;2013 <a href="mailto:rygorous_at_gmail_dot_com">Fabian 'ryg' Giesen</a>.</p>
+    </footer>
+  </body>
+</html>
