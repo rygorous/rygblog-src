@@ -177,7 +177,7 @@ actually shares the same material instance between all its users (the previous
 version created copies). <em>This is not necessarily a safe change to
 make</em>. I have no idea what invariants the asset manager tries to enforce,
 if any. Certainly, this would cause problems if someone were to start modifying
-materials after loading - you'd need to introduce copy-on-write or something
+materials after loading --- you'd need to introduce copy-on-write or something
 similar. But in our case (i.e. the Software Occlusion Culling demo), the
 materials do not get modified after loading, and sharing them is completely
 safe.
@@ -256,11 +256,11 @@ void AABBoxRasterizerSSE::RenderVisible(CPUTAssetSet **pAssetSet,
 
 This code first enumerates all <code>RenderNodes</code> (a base class) in the
 active asset libraries, ask each of them "are you a model?", and if so renders
-it. This is a construct that I've seen several times before - but from a
+it. This is a construct that I've seen several times before --- but from a
 performance standpoint, this is a <em>terrible</em> idea. We walk over the
 whole scene database, do a virtual function call (which means we have, at the
 very least, load the cache line containing the vtable pointer) to check if the
-current item is a model, and only then check if it is culled - in which case we
+current item is a model, and only then check if it is culled --- in which case we
 just ignore it.
 
 That is a stupid game and we should stop playing it.
@@ -320,7 +320,7 @@ That already looks much better. But how much does it help?
 I rest my case.
 
 And I figure that this nice 2.59x cumulative speedup on the rendering code is a
-good stopping point for the coding part of this series - quit while you're
+good stopping point for the coding part of this series --- quit while you're
 ahead and all that. There's a few more minor fixes (both for actual bugs and
 speed problems) on <a
 href="https://github.com/rygorous/intel_occlusion_cull/commits/blog">Github</a>,

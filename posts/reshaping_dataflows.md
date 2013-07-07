@@ -60,7 +60,7 @@ if(...)
 ```
 
 That's it. That's the only call sites. There's really no reason for
-<code>mVisible</code> to be state - semantically, it's just a return value for
+<code>mVisible</code> to be state --- semantically, it's just a return value for
 <code>RasterizeAndDepthTestAABBox</code>, so that's what it should be -
 <em>always</em> try to get rid of superfluous state. This doesn't even have
 anything to do with optimization per se; explicit dataflow is easy for
@@ -102,7 +102,7 @@ tries to figure out whether the source vertex was in front of the near plane
 (i.e. outside the view frustum or not). An ugly wrinkle here is that the near
 plane is hard-coded to be at 1. Doing this after dividing by w adds extra
 complications since the code needs to be careful about the signs. And the
-second comment is outright wrong - it in fact early-outs when <em>any</em> of
+second comment is outright wrong --- it in fact early-outs when <em>any</em> of
 the four active triangles have vertex number <code>vv</code> outside the
 near-clip plane, not when all of them do. In other words, if any of the 4
 active triangles get near-clipped, the test rasterizer will just punt and
@@ -131,9 +131,9 @@ void TransformedAABBoxSSE::TransformAABBox()
 As we can see, returning 1/w does in fact take a bit of extra work, so we'd
 like to avoid it, especially since that 1/w is really only referenced by the
 near-clip checking code. Also, the code seems to clamp w at some arbitrary
-small positive value - which means that the part of the near clip computation
+small positive value --- which means that the part of the near clip computation
 in the depth test rasterizer that worries about w&lt;0 is actually unnecessary.
-This is the kind of thing I'm talking about - each piece of code in isolation
+This is the kind of thing I'm talking about --- each piece of code in isolation
 seems reasonable, but once you look at both sides it becomes clear that the
 pieces don't fit together all that well.
 
@@ -285,7 +285,7 @@ the only matrix that is different between boxes is the very first one, the
 world matrix, and since matrix multiplication is associative, we can just
 concatenate the other three once.
 * There's also no need for <code>mOccludeeSizeThreshold</code> to be squared
-  every time - we can do that once.
+  every time --- we can do that once.
 * Nor is there a need for it to be stored per box, since it's a global constant
   owned by the depth test rasterizer.
 * <code>(radius / w) / tanOfHalfFov</code> would be better computed as
@@ -382,17 +382,17 @@ Another 0.2ms off the median run time, bringing our total reduction for this pos
 
 Currently, each <code>TransformedAABBoxSSE</code> still keeps its own copy of
 the cumulative transform matrix and a copy of its transformed vertices. But
-it's not necessary for these to be persistent - we compute them once, use them
+it's not necessary for these to be persistent --- we compute them once, use them
 to rasterize the box, then don't look at them again until the next frame. So,
 like <code>mVisible</code> earlier, there's really no need to keep them around
 as state; instead, it's better to just store them on the stack. Less pointers
-per <code>TransformedAABBoxSSE</code>, less cache misses, and - perhaps most
-important of all - it makes the bounding box objects themselves stateless.
+per <code>TransformedAABBoxSSE</code>, less cache misses, and --- perhaps most
+important of all --- it makes the bounding box objects themselves stateless.
 Granted, that's the case only because our world is perfectly static and nothing
 is animated at runtime, but still, stateless is good! Stateless is easier to
 read, easier to debug, and easier to test.
 
-Again, this is another change that is purely mechanical - just pass in a
+Again, this is another change that is purely mechanical --- just pass in a
 pointer to <code>cumulativeMatrix</code> and <code>xformedPos</code> to the
 functions that want them. So this time, I'm just going to refer you directly to
 the <a
@@ -435,7 +435,7 @@ There's one more piece of unnecessary data we currently store per bounding box:
 the vertex list, initialized in <code>CreateAABBVertexIndexList</code>:
 
 ```cpp
-float3 min = mBBCenter - bbHalf;
+float3 min = mBBCenter --- bbHalf;
 float3 max = mBBCenter + bbHalf;
 	
 //Top 4 vertices in BB
@@ -451,7 +451,7 @@ mpBBVertexList[7] = _mm_set_ps(1.0f, min.z, min.y, min.x);
 ```
 
 This is, in effect, just treating the bounding box as a general mesh. But
-that's extremely wasteful - we already store center and half-extent, the
+that's extremely wasteful --- we already store center and half-extent, the
 min/max corner positions are trivial to reconstruct from that information, and
 all the other vertices can be constructed by splicing min/max together
 componentwise using a set of masks that is the same for all bounding boxes. So
@@ -477,7 +477,7 @@ static const int sBBzInd[AABB_VERTICES] = { 1, 1, 0, 0, 0, 1, 1, 0 };
 bool TransformedAABBoxSSE::TransformAABBox(__m128 xformedPos[],
     const __m128 cumulativeMatrix[4])
 {
-    // w ends up being garbage, but it doesn't matter - we ignore
+    // w ends up being garbage, but it doesn't matter --- we ignore
     // it anyway.
     __m128 vCenter = _mm_loadu_ps(&mBBCenter.x);
     __m128 vHalf   = _mm_loadu_ps(&mBBHalf.x);
@@ -553,7 +553,7 @@ front-load a lot of the computation; most of the per-vertex work done in
 
 This brings our total for this post to a nearly 25% reduction in median depth
 test time, plus about 320 bytes memory reduction per
-<code>TransformedAABBoxSSE</code> - which, since we have about 27000 of them,
+<code>TransformedAABBoxSSE</code> --- which, since we have about 27000 of them,
 works out to well over 8 megabytes. Such are the rewards for widening the scope
 beyond optimizing functions by themselves.
 

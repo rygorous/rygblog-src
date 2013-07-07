@@ -28,7 +28,7 @@ are doing at the same time, and just march on ahead. But if it later turns out
 that the branch actually went in the other direction, that there was a memory
 conflict, or that some exception / hardware interrupt occurred, all the
 instructions that were executed in the meantime are invalid and their results
-must be discarded - the speculation didn't pan out. The implicit assumption is
+must be discarded --- the speculation didn't pan out. The implicit assumption is
 that our speculation (branches behave as predicted, memory accesses generally
 don't conflict and CPU exceptions/interrupts are rare) is right most of the
 time, so it generally pays off to forge ahead, and the savings are worth the
@@ -54,7 +54,7 @@ point was, and make sure that the associated physical registers from the
 "before" snapshot don't get reused until the instruction is safely retired.
 
 This takes care of register modifications. We already know what happens with
-loads from memory - we just run them, and if it later turns out that the memory
+loads from memory --- we just run them, and if it later turns out that the memory
 contents changed between the load instruction's execution and its retirement,
 we need to re-run that block of code. Stores are the tricky part: we can't
 easily do "memory renaming" since memory (unlike registers) is a shared
@@ -62,8 +62,8 @@ resource, and also unlike registers rarely gets written in whole "accounting
 units" (cache lines) at a time.
 
 The solution are <em>store buffers</em>: when a store instruction is executed,
-we do all the necessary groundwork - address translation, access right checking
-and so forth - but don't actually write to memory just yet; rather, the target
+we do all the necessary groundwork --- address translation, access right checking
+and so forth --- but don't actually write to memory just yet; rather, the target
 address and the associated data bits are written into a store buffer, where
 they just sit around for a while; the store buffers form a log of all pending
 writes to memory. Only after the core is sure that the store instruction will
@@ -85,8 +85,8 @@ would certainly hope that at the end of this instruction sequence,
 <code>eax</code> and <code>ebx</code> contain the same value. But remember that
 the first instruction (the store) just writes to a store buffer, whereas the
 second instruction (the load) normally just references the cache. At the very
-least, we have to detect that this is happening - i.e., that we are trying to
-load from an address that currently has a write logged in a store buffer - but
+least, we have to detect that this is happening --- i.e., that we are trying to
+load from an address that currently has a write logged in a store buffer --- but
 there's numerous things we could do with that information.
 
 One option is to simply stall the core and wait until the store is done before
@@ -99,14 +99,14 @@ say it won't win you many friends.
 So x86 cores normally use a technique called "store to load forwarding" or just
 "store forwarding", where loads can actually read data directly from the store
 buffers, at least under certain conditions. This is much more expensive in
-hardware - it adds a <em>lot</em> of wires between the load unit and the store
-buffers - but it is far less finicky to use on the software side.
+hardware --- it adds a <em>lot</em> of wires between the load unit and the store
+buffers --- but it is far less finicky to use on the software side.
 
 So what are the conditions? The details depend on the core in question.
 Generally, if you store a value to a naturally aligned location in memory, and
 do a load with the same size as the store, you can expect store forwarding to
-work. If you do trickier stuff - span multiple cache lines, or use mismatched
-sizes between the loads and stores, for example - it really does depend. Some
+work. If you do trickier stuff --- span multiple cache lines, or use mismatched
+sizes between the loads and stores, for example --- it really does depend. Some
 of the more recent Intel cores can also forward larger stores into smaller
 loads (e.g. a DWord read from a location written with <code>MOVDQA</code>)
 under certain circumstances, for example. The dual case (large load overlapping
@@ -162,7 +162,7 @@ vectors are written element by element; then, as soon as we try to read the
 whole vector into a register, we hit a forwarding stall, because the core can't
 forward the results from the 4 different stores per vector to a single load. It
 turns out that the other two instances of forwarding stalls run into this
-problem for the same reason - during the gather of bounding box vertices and
+problem for the same reason --- during the gather of bounding box vertices and
 triangle vertices in the rasterizer, respectively.
 
 So how do we fix it? Well, we'd really like those vectors to be written using
@@ -334,7 +334,7 @@ The <code>TILE_ROWS</code> and <code>TILE_COLS</code> parts should be obvious.
 The <code>BINNER_TASKS</code> needs some explanation though: as you hopefully
 remember, we try to divide the work between binning tasks so that each of them
 gets roughly the same amount of triangles. Now, before we start binning
-triangles, we don't know which tiles they will go into - after all, that's what
+triangles, we don't know which tiles they will go into --- after all, that's what
 the binner is there to find out.
 
 We could have just one output buffer (bin) per tile; but then, whenever two
@@ -348,11 +348,11 @@ ordering-invariant) it's still a complete pain to debug.
 
 Hence there is one bin per tile per binning worker. We already know that the
 binning workers get assigned the triangles in the order they occur in the
-models - with the 32 binning workers we use, the first binning task gets the
+models --- with the 32 binning workers we use, the first binning task gets the
 first 1/32 of the triangles, and second binning task gets the second 1/32, and
 so forth. And each binner processes triangles in order. This means that the
 rasterizer tasks can still process triangles in the original order they occur
-in the mesh - first process all triangles inserted by binner 0, then all
+in the mesh --- first process all triangles inserted by binner 0, then all
 triangles inserted by binner 1, and so forth. Since they're in distinct memory
 ranges, that's easily done. And each bin has a separate triangle counter, so
 they don't interfere, right? Nothing to see here, move along.
@@ -375,9 +375,9 @@ the array indices around.
 
 <code>uint16 pNumTrisInBin[BINNER_TASKS][TILE_ROWS][TILE_COLS]</code>
 
-We also happen to have 32 tiles total - which means that now, each binner task
+We also happen to have 32 tiles total --- which means that now, each binner task
 gets its own cache line by itself (again, provided we align things correctly).
-So again, it's a really easy fix. The question being - how much does it help?
+So again, it's a really easy fix. The question being --- how much does it help?
 
 <b>Change:</b> Change pNumTrisInBin array indexing
 <table>
@@ -430,9 +430,9 @@ thing that springs to eye:
 ![Binning branch mispredicts](hotspots_binning_mispred.png)
 
 Branch mispredictions. Now, the two rasterizers have legitimate reason to be
-mispredicting branches some of the time - they're processing triangles with
+mispredicting branches some of the time --- they're processing triangles with
 fairly unpredictable sizes, and the depth test rasterizer also has an early-out
-that's hard to predict. But the binner has less of an excuse - sure, the
+that's hard to predict. But the binner has less of an excuse --- sure, the
 triangles have very different dimensions measured <em>in 2x2 pixel blocks</em>,
 but the vast majority of our triangles fits inside one of our (generously
 sized!) 320x90 pixel tiles. So where are all these branches?
@@ -461,7 +461,7 @@ Oh yeah, that. In particular, the first test (which checks for degenerate and
 back-facing triangles) will reject roughly half of all triangles and can be
 fairly random (as far as the CPU is concerned). Now, [last time we had an issue
 with branch mispredicts](*depth_buffers_done_quick_1), we simply removed the
-offending early-out. That's a really bad idea in this case - any triangles we
+offending early-out. That's a really bad idea in this case --- any triangles we
 don't reject here, we're gonna waste even more work on later. No, these tests
 really should all be done here.
 
@@ -507,7 +507,7 @@ if((triMask & (1 << i)) == 0)
 
 However, we can do slightly better than that: it turns out we can iterate
 pretty much directly over the set bits in <code>triMask</code>, which means
-we're now down to one single branch in the outer loop - the loop counter
+we're now down to one single branch in the outer loop --- the loop counter
 itself. The modified loop looks like this:
 
 ```cpp
@@ -597,8 +597,8 @@ more obvious if you compare the number of clock cyles with the previous image.
 
 And with that, I'll conclude this journey into both the triangle binner and the
 dark side of speculative execution. We're also getting close to the end of this
-series - the next post will look again at the loading and rendering code we've
+series --- the next post will look again at the loading and rendering code we've
 been intentionally ignoring for most of this series :), and after that I'll
-finish with a summary and wrap-up - including a list of things I didn't cover,
+finish with a summary and wrap-up --- including a list of things I didn't cover,
 and why not.
 
