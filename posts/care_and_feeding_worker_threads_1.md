@@ -1,6 +1,6 @@
 -time=2013-02-17 23:31
 -parent=occlusion_culling
-# The care and feeding of worker threads, part 1
+-title=The care and feeding of worker threads, part 1
 
 It's time for another post! After all the time I've spent on squeezing about
 20% out of the depth rasterizer, I figured it was time to change gears and look

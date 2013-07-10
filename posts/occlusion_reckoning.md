@@ -1,6 +1,6 @@
 -time=2013-03-10
 -parent=occlusion_culling
-# Optimizing Occlusion Culling: The Reckoning
+-title=Optimizing Occlusion Culling: The Reckoning
 
 Welcome back! Last time, I promised to end the series with a bit of reflection on the results. So, time to find out
 how far we've come!

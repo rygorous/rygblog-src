@@ -1,6 +1,6 @@
 -time=2013-01-30
 -parent=occlusion_culling
-# A string processing rant
+-title=A string processing rant
 
 Rants are not usually the style of this blog, but this one I just don't want to
 keep in. So if you're curious, the actual information content of this post will

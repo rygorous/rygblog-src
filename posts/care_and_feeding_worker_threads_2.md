@@ -1,6 +1,6 @@
 -time=2013-02-25 2:39
 -parent=occlusion_culling
-# The care and feeding of worker threads, part 2
+-title=The care and feeding of worker threads, part 2
 
 In the [previous post](*care_and_feeding_worker_threads_1), we took a closer
 look at what our worker threads were doing and spent some time load-balancing

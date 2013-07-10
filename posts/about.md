@@ -1,5 +1,5 @@
--pagename=about
-# About
+-type=page
+-title=About
 
 My name is Fabian 'ryg' Giesen and this is my blog. I'm a systems programmer who likes math.
 I currently work at [RAD Game Tools](http://www.radgametools.com) in Kirkland, WA. I'm also a member of the

@@ -1,6 +1,6 @@
 -time=2013-02-28 3:12
 -parent=occlusion_culling
-# Reshaping dataflows
+-title=Reshaping dataflows
 
 Welcome back! So far, we've spent quite some time "zoomed in" on various
 components of the Software Occlusion Culling demo, looking at various

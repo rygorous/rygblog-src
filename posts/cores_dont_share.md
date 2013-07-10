@@ -1,6 +1,6 @@
 -time=2013-01-31 0:28
 -parent=occlusion_culling
-# Cores don't like to share
+-title=Cores don't like to share
 
 Two posts ago, I explained write combining and used a real-world example to
 show how badly it can go wrong if you're not careful. The last part was an

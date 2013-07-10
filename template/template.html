@@ -29,7 +29,7 @@
     <nav>
       <div class="container">
         <ul>
-          <li{{if not .Post.PageName}} class="active"{{end}}><a href="{{.Blog.MostRecent.Href}}">Blog</a></li>{{range .Blog.Pages}}
+          <li{{if not .Post.Type}} class="active"{{end}}><a href="{{.Blog.MostRecent.Href}}">Blog</a></li>{{range .Blog.Pages}}
           <li{{if .Active}} class="active"{{end}}><a href="{{.Href}}">{{.Title}}</a></li>{{end}}
           <li><a href="{{.Blog.AtomFeedFile}}">Subscribe&nbsp;<img src="static/feed-icon.png" width=14 height=14 alt="Feed"></a>
           <li>

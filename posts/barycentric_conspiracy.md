@@ -1,6 +1,6 @@
 -time=2013-02-06 03:16
 -parent=occlusion_culling
-# The barycentric conspiracy
+-title=The barycentric conspiracy
 
 And welcome back to my impromptu optimization series. Today, we won't see a
 single line of code, nor a profiler screenshot. That's because our next subject

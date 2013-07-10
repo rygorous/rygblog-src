@@ -1,6 +1,6 @@
 -time=2013-01-29
 -parent=occlusion_culling
-# Write combining is not your friend
+-title=Write combining is not your friend
 
 Most memory you deal with on a daily basis is cached; on CPUs, it's usually
 write-back cached. While dealing with processor caches can be

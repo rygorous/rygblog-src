@@ -1,6 +1,6 @@
 -time=2013-03-04 3:16
 -parent=occlusion_culling
-# Speculatively speaking
+-title=Speculatively speaking
 
 Welcome back! Today, it's time to take a closer look at the triangle binning
 code, which we've only seen mentioned briefly so far, and we're going to see a

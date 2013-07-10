@@ -1,6 +1,6 @@
 -time=2013-02-10 03:30
 -parent=occlusion_culling
-# Optimizing the basic rasterizer
+-title=Optimizing the basic rasterizer
 
 <a href="http://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/">Last time</a>, we saw how to write a simple triangle rasterizer, analyzed its behavior with regard to integer overflows, and discussed how to modify it to incorporate sub-pixel precision and fill rules. This time, we're going to make it run fast. But before we get started, I want to get one thing out of the way:
 

@@ -1,6 +1,6 @@
 -time=2013-02-16 19:21
 -parent=occlusion_culling
-# Depth buffers done quick, part 2
+-title=Depth buffers done quick, part 2
 
 Welcome back! At the end of the [last post](*depth_buffers_done_quick_1), we
 had just finished doing a first pass over the depth buffer rendering loops.

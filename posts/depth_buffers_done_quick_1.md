@@ -1,6 +1,6 @@
 -time=2013-02-11 03:18
 -parent=occlusion_culling
-# Depth buffers done quick, part 1
+-title=Depth buffers done quick, part 1
 
 Welcome back to yet another post on my series about Intel's <a
 href="http://software.intel.com/en-us/vcsource/samples/software-occlusion-culling">Software

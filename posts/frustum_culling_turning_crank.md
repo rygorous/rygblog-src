@@ -1,6 +1,6 @@
 -time=2013-02-02 04:22
 -parent=occlusion_culling
-# Frustum culling: turning the crank
+-title=Frustum culling: turning the crank
 
 In the past few posts, we've been looking at Intel's
 [Software Occlusion Culling sample](http://software.intel.com/en-us/vcsource/samples/software-occlusion-culling).

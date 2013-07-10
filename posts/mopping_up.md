@@ -1,6 +1,6 @@
 -time=2013-03-05 2:10
 -parent=occlusion_culling
-# Mopping up
+-title=Mopping up
 
 Welcome back! This post is going to be slightly different from the others. So
 far, I've attempted to group the material thematically, so that each post has a

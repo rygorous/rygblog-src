@@ -1,6 +1,6 @@
 -time=2013-02-08 23:31
 -parent=occlusion_culling
-# Triangle rasterization in practice
+-title=Triangle rasterization in practice
 
 Welcome back! The [previous post](*barycentric_conspiracy)
 gave us a lot of theoretical groundwork on triangles. This time, let's

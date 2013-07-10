@@ -1,5 +1,5 @@
 -time=2013-03-13
-# 64-bit mode and 3-operand instructions
+-title=64-bit mode and 3-operand instructions
 
 One interesting thing about x86 is that it's changed two major
 architectural "magic values" in the past 10 years. The first is the

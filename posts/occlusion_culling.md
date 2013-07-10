@@ -1,5 +1,5 @@
 -time=2013-02-17
-# Optimizing Software Occlusion Culling
+-title=Optimizing Software Occlusion Culling
 
 In January of 2013, some nice folks at Intel released a [Software Occlusion
 Culling demo](http://software.intel.com/en-us/vcsource/samples/software-occlusion-culling)

@@ -1,6 +1,6 @@
 -time=2013-02-01 1:54
 -parent=occlusion_culling
-# Fixing cache issues, the lazy way
+-title=Fixing cache issues, the lazy way
 
 Last time, we ended on a bit of a cliffhanger. We'll continue right where we
 left off, but first, I want to get a few things out of the way.
