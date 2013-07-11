@@ -48,7 +48,7 @@
         <div id="posts">
           <article>
             <header>{{if not .Post.Published.IsZero}}
-              <time>{{with .Post.Published}}{{printf "%d-%02d-%02d" .Year .Month .Day}}{{end}}</time>{{end}}
+              <time>{{with .Post.Published.Local}}{{printf "%d-%02d-%02d" .Year .Month .Day}}{{end}}</time>{{end}}
               <h1><a href="{{.Post.Href}}">{{.Post.Title}}</a></h1>
             </header>
             {{with .Post.Parent}}<p><em>This post is part of the series &ldquo;<a href="{{.Href}}">{{.Title}}</a>&rdquo;.</em></p>{{end}}
