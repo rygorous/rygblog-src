@@ -25,10 +25,9 @@ Some readers have commented that this is a really low\-level description of the 
   <a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">
     <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" style="border-style:none;" alt="CC0"/>
   </a>
-<br>  <br>
-<br/>
-<br>  To the extent possible under law,
-<br>  <a rel="dct:publisher" href="http://fgiesen.wordpress.com">
-    <span>Fabian Giesen</span></a>
-<br>  has waived all copyright and related or neighboring rights to
-<br>  <span>A trip through the Graphics Pipeline 2011</span>.
+
+To the extent possible under law,
+<a rel="dct:publisher" href="http://fgiesen.wordpress.com">
+<span>Fabian Giesen</span></a>
+has waived all copyright and related or neighboring rights to
+<span>A trip through the Graphics Pipeline 2011</span>.
