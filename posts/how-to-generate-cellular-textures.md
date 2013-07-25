@@ -3,9 +3,7 @@
 -time=2010-03-28 01:19:58
 Cellular textures are a really useful primitive to have in a texture generator. Jim Scott alias blackpawn wrote a great introduction to the subject several years ago \- [it's available here](http://blackpawn.com/texts/cellular/default.html). If you don't know what cellular textures are, start there; I'm gonna get right into the juicy bits. Jims article does a great job of putting you onto the right track, but I have two complaints about it. The first one is minor: there's another method to combine the two distances that's quite useful to have, namely \(dist2 \- dist1\) / \(dist2 \+ dist1\) or equivalently 1 \- \(2 dist1\) / \(dist1 \+ dist2\), where dist1 and dist2 are the distances to the closest and second\-closest points, respectively. This is like "dist2 \- dist1", but the distances are "normalized", i.e. there are no huge brightness variations between the cells. Very handy \(the result is shown below\). The second complaint is more serious: I strongly disagree with his recommendation of using trees to accelerate the distance calculations, because there's a much simpler method that improves performance far more. But let's start at the beginning.
 
-![Cellular texture generated with the (dist2 - dist1) / (dist2 + dist1) formula](http://www.farbrausch.de/~fg/blog/cellular.png)
-
-
+![Cellular texture generated with the (dist2 - dist1) / (dist2 + dist1) formula](wpmedia/cellular.png)
 
 The first thing to take care of is to clearly define our problem. In this case, we'd like to determine, for each pixel in the image, the distance to the closest two points in a given set. \(Even though several of the shading formulas work with just the distance to the closest point, we'd really like to have both if possible\). To solve this problem, we need to determine which points are the two closest neighbors to any given pixel; we can easily calculate the distances from there. The geometric structure that answers this problem is the so\-called *2nd\-order Voronoi diagram*, which is closely related to the "normal" \(1st\-order\) Voronoi diagram you might already know. The 2nd\-order Voronoi diagram solves our problem neatly: it gives us a polygonal description of each cell, all we have to do is fill the polygons and calculate the distances. It's also, however, rather complicated to compute, with lots of fairly tricky code.
 
@@ -13,7 +11,7 @@ Blackpawns solution is to use a point location structure. He gives one flavor of
 
 Of course we can, but let's start with some code fragments for the brute force implementation:
 
-```
+```cpp
 static inline float wrapDist(float a, float b)
 {
   float d = fabs(b - a);
