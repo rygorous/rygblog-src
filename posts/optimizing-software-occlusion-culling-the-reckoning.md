@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Optimizing Software Occlusion Culling: The Reckoning
 -time=2013-03-10 09:59:27
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Welcome back! Last time, I promised to end the series with a bit of reflection on the results. So, time to find out how far we've come!
 

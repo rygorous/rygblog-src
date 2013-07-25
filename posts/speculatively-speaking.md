@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Speculatively speaking
 -time=2013-03-04 11:16:58
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Welcome back! Today, it's time to take a closer look at the triangle binning code, which we've only seen mentioned briefly so far, and we're going to see a few more pitfalls that all relate to [speculative execution](http://en.wikipedia.org/wiki/Speculative_execution).
 

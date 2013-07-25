@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Optimizing the basic rasterizer
 -time=2013-02-10 11:30:16
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 [Last time](*triangle-rasterization-in-practice), we saw how to write a simple triangle rasterizer, analyzed its behavior with regard to integer overflows, and discussed how to modify it to incorporate sub\-pixel precision and fill rules. This time, we're going to make it run fast. But before we get started, I want to get one thing out of the way:
 

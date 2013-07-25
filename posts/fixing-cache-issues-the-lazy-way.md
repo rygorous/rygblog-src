@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Fixing cache issues, the lazy way
 -time=2013-02-01 09:54:16
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Last time, we ended on a bit of a cliffhanger. We'll continue right where we left off, but first, I want to get a few things out of the way.
 

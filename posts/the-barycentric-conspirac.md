@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=The barycentric conspiracy
 -time=2013-02-06 11:16:10
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 And welcome back to my impromptu optimization series. Today, we won't see a single line of code, nor a profiler screenshot. That's because our next subject is the triangle rasterizer, and we better brush up on our triangle facts before we dive into that. A lot of it is going to involve barycentric coordinates, hence the name. Be warned, this post is a lot drier than the previous ones, and it doesn't even have a big pay\-off at the end. It's a pure, uncut info\-dump. The purpose is to collect all this material in one place so I can refer back to it later as necessary.
 

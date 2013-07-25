@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Depth buffers done quick, part 1
 -time=2013-02-11 11:18:26
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Welcome back to yet another post on my series about Intel's [Software Occlusion Culling](http://software.intel.com/en-us/vcsource/samples/software-occlusion-culling) demo. The past few posts were about triangle rasterization in general; at the end of the previous post, we saw how the techniques we've been discussing are actually implemented in the code. This time, we're going to make it run faster \- no further delays.
 

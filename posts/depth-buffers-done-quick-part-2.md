@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Depth buffers done quick, part 2
 -time=2013-02-17 03:21:49
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Welcome back! At the end of the [last post](*depth-buffers-done-quick-part), we had just finished doing a first pass over the depth buffer rendering loops. Unfortunately, the first version of that post listed a final rendering time that was an outlier; more details in the post \(which also has been updated to display the timing results in tables\).
 

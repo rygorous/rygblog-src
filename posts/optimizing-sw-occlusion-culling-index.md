@@ -1,4 +1,4 @@
--title=Optimizing Software Occlusion Culling - index
+-title=Optimizing Software Occlusion Culling
 -time=2013-02-17 23:33:57
 In January of 2013, some nice folks at Intel released a [Software Occlusion Culling demo](http://software.intel.com/en-us/vcsource/samples/software-occlusion-culling) with full source code. I spent about two weekends playing around with the code, and after realizing that it made a great example for various things I'd been meaning to write about for a long time, started churning out blog posts about it for the next few weeks. This is the resulting series.
 
@@ -21,17 +21,17 @@ Here's the list of posts \(the series is now finished\):
 15. ["Mopping up"](*mopping-up) \- a bunch of things that didn't fit anywhere else.
 16. ["The Reckoning"](*optimizing-software-occlusion-culling-the-reckoning) \- in which a lesson is learned, but [the damage is irreversible](http://www.alessonislearned.com/).
 
+You can also get [all posts merged together into one article](*collect_optimizing-sw-occlusion-culling-index) in case you want to print them on paper.
+
 All the code is available on [Github](https://github.com/rygorous/intel_occlusion_cull/); there's various branches corresponding to various \(simultaneous\) tracks of development, including a lot of experiments that didn't pan out. The articles all reference the [blog branch](https://github.com/rygorous/intel_occlusion_cull/tree/blog) which contains only the changes I talk about in the posts \- i.e. the stuff I judged to be actually useful.
 
 Special thanks to Doug McNabb and Charu Chandrasekaran at Intel for publishing the example with full source code and a permissive license, and for saying "yes" when I asked them whether they were okay with me writing about my findings in this way!
 
-  <a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">
-    <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" style="border-style:none;" alt="CC0"/>
-  </a>
-<br>  <br>
-<br/>
-<br>  To the extent possible under law,
-<br>  <a rel="dct:publisher" href="http://fgiesen.wordpress.com">
-    <span>Fabian Giesen</span></a>
-<br>  has waived all copyright and related or neighboring rights to
-<br>  <span>Optimizing Software Occlusion Culling</span>.
+<a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">
+  <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" style="border-style:none;" alt="CC0"/>
+</a>
+To the extent possible under law,
+<a rel="dct:publisher" href="http://fgiesen.wordpress.com">
+<span>Fabian Giesen</span></a>
+has waived all copyright and related or neighboring rights to
+<span>Optimizing Software Occlusion Culling</span>.

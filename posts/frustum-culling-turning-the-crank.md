@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Frustum culling: turning the crank
 -time=2013-02-02 12:22:15
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 In the past few posts, we've been looking at Intel's [Software Occlusion Culling sample](http://software.intel.com/en-us/vcsource/samples/software-occlusion-culling). This post is going to be a bit shorter than the others so far. This has two reasons: first, next up is the rasterizer. It turns out there's another common performance problem we're gonna see in this series, but right now, fixing it is not going to make much of a difference: as it is, the rasterizer in the sample is fairly well balanced, and it's not making any serious mistakes. In other words, this time round, we don't get any easy pickings. Unlike the somewhat peripheral framework code we've been looking at so far, this is the actual heart of this sample, and it was written by people who know what they're doing. Speeding it up is going to take some actual algorithmic improvements, which means a lot of prep work for me, since I'll need to teach you the necessary groundwork first. :\) This is gonna take several posts, but I promise that we'll get a properly satisfying finale.
 

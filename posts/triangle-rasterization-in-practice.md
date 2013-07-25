@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Triangle rasterization in practice
 -time=2013-02-09 07:31:57
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Welcome back! The [previous post](*the-barycentric-conspirac) gave us a lot of theoretical groundwork on triangles. This time, let's turn it into a working triangle rasterizer. Again, no profiling or optimization this time, but there will be code, and it should get us set up to talk actual rasterizer optimizations in the next post. But before we start optimizing, let's first try to write the simplest rasterizer that we possibly can, using the primitives we saw in the last part.
 

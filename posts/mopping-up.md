@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Mopping up
 -time=2013-03-05 10:10:59
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Welcome back! This post is going to be slightly different from the others. So far, I've attempted to group the material thematically, so that each post has a coherent theme \(to a first\-order approximation, anyway\). Well, this one doesn't \- this is a collection of everything that didn't fit anywhere else. But don't worry, there's still some good stuff in here! That said, one warning: there's a bunch of poking around in the framework code this time, and it didn't come with docs, so I'm honestly not quite sure how some of the internals are supposed to work. So the code changes referenced this time are definitely on the hacky side of things.
 

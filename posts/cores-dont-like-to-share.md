@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Cores don't like to share
 -time=2013-01-31 08:28:21
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Two posts ago, I explained write combining and used a real\-world example to show how badly it can go wrong if you're not careful. The last part was an out\-of\-turn rant about some string and memory management insanity that was severely hurting the loading times of that same program. That program was Intel's [Software Occlusion Culling](http://software.intel.com/en-us/vcsource/samples/software-occlusion-culling) sample, which I've been playing around with for the last two weekends.
 

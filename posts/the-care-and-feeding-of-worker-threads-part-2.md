@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=The care and feeding of worker threads, part 2
 -time=2013-02-25 10:39:45
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 In the [previous post](*care-and-feeding-of-worker-threads-part-1), we took a closer look at what our worker threads were doing and spent some time load\-balancing the depth buffer rasterizer to reduce our overall latency. This time, we'll have a closer look at the rest of the system.
 

@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=The care and feeding of worker threads, part 1
 -time=2013-02-18 07:31:20
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 It's time for another post! After all the time I've spent on squeezing about 20% out of the depth rasterizer, I figured it was time to change gears and look at something different again. But before we get started on that new topic, there's one more set of changes that I want to talk about.
 

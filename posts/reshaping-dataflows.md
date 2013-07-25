@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Reshaping dataflows
 -time=2013-02-28 11:12:40
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Welcome back! So far, we've spent quite some time "zoomed in" on various components of the Software Occlusion Culling demo, looking at various micro\-architectural pitfalls and individual loops. In the last two posts, we "zoomed out" and focused on the big picture: what work runs when, and how to keep all cores busy. Now, it's time to look at what lies in between: the plumbing, if you will. We'll be looking at the dataflows between subsystems and modules and how to improve them.
 

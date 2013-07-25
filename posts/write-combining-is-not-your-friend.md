@@ -1,6 +1,6 @@
+-parent=optimizing-sw-occlusion-culling-index
 -title=Write combining is not your friend
 -time=2013-01-29 08:07:40
-*This post is part of a series \- go [here](*optimizing-sw-occlusion-culling-index) for the index.*
 
 Most memory you deal with on a daily basis is cached; on CPUs, it's usually write\-back cached. While dealing with processor caches can be counter\-intuitive, caching works well most of the time, and it's mostly transparent to the programmer \(and certainly the user\). However, if we are to use the cache to service memory reads, we need to make sure to invalidate our cache entries if someone else writes to the corresponding memory locations. This is implemented using one of several mechanisms referred to as ["coherency protocols"](http://en.wikipedia.org/wiki/Cache_coherence#Coherency_protocol), which CPU cores use to synchronize their caches with each other.
 
