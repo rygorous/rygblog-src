@@ -8,7 +8,7 @@ That's one of the reasons why GPUs tend to prefer *tiled* or *swizzled* texture 
 
 This one's fairly simple. You chop the image up into smaller subrects of M x N pixels. For hardware usage, M and N are always powers of 2. For example, with 64\-byte cache lines, you might decide to chop up 32bpp textures into tiles of 4x4 pixels, so each cache line contains one tile. That way, any traversal that doesn't skip around wildly through the image is likely to get roughly the same cache hit rates. It also means that all images must be padded to have widths and heights that are multiples of 4. Overall, addressing looks like this:
 
-```
+```cpp
   // per-texture constants
   uint tileW = 4;
   uint tileH = 4;
@@ -38,7 +38,7 @@ MSB ...                bits                     ... LSB
 +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 ```
 
-where x0..7 are the bits corresponding to the x coordinates, y0..7 are the bits corresponding to the y coordinate, and c0..1 correspond to the color channel index \- whether your image uses ARGB, BGRA or RGBA byte order is a holy war I won't concern myself with today :\). A popular swizzle pattern is Morton order \(also often called "Z\-order" because the order that pixels are stored in follows a distinct recursive Z\-shaped pattern\) which interleaves the x and y bits:
+where x0..7 are the bits corresponding to the x coordinates, y0..7 are the bits corresponding to the y coordinate, and c0..1 correspond to the color channel index---whether your image uses ARGB, BGRA or RGBA byte order is a holy war I won't concern myself with today :\). A popular swizzle pattern is Morton order \(also often called "Z\-order" because the order that pixels are stored in follows a distinct recursive Z\-shaped pattern\) which interleaves the x and y bits:
 
 ```
 +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -70,11 +70,11 @@ The last few examples already touch on another idea: One way to construct swizzl
 
 All schemes that can be expressed as nested tiling have a nice property: they consume bits from the x and y coordinates in order. They might interleave them in arbitrary groups, but they'll never swap the relative order of bits inside a coordinate. This turns out to be very convenient for software implementations, and I'll limit myself to texture swizzle patterns that can be expressed as some form of nested tiling in the rest of this post.
 
-The "nested tiling" approach also generalizes to non\-power\-of\-2 texture sizes. In general, you have some "top\-level tile size" \(the largest of your nested tile sizes\) \- say 32x32 pixels. Above that, you use the regular 2D \(row\-major\) array order. You need to pad textures to be multiples of 32 pixels in width and height, but they don't need to have power\-of\-2 dimensions. Of course that means you can't easily represent anything above the 32x32 pixel level with a nice per\-bit diagram anymore. More about this later.
+The "nested tiling" approach also generalizes to non\-power\-of\-2 texture sizes. In general, you have some "top\-level tile size" \(the largest of your nested tile sizes\)---say 32x32 pixels. Above that, you use the regular 2D \(row\-major\) array order. You need to pad textures to be multiples of 32 pixels in width and height, but they don't need to have power\-of\-2 dimensions. Of course that means you can't easily represent anything above the 32x32 pixel level with a nice per\-bit diagram anymore. More about this later.
 
 ### Swizzling textures in software
 
-Okay, so this is the real reason for me to write this post. Over the past few months I've written fast texture swizzling functions for various platforms. Normally this is either something you deal with at asset build time \(you just store them in your platform\-preferred format on disk\) or something the driver handles for you \(if you're working on PC or Mac\), but in this particular case we needed to deal with compressed images \(think JPEG or PNG\) that had to be converted to the platform\-specific swizzled format at runtime. This conversion step needed to be fast, and it needed to support updating arbitrary subrects of an image \- that last requirement being there because a\) some textures are updated dynamically from an in\-memory copy \(with dirty rectangles available\), and b\) decompression and swizzling are interleaved to prevent data falling out of the cache.
+Okay, so this is the real reason for me to write this post. Over the past few months I've written fast texture swizzling functions for various platforms. Normally this is either something you deal with at asset build time \(you just store them in your platform\-preferred format on disk\) or something the driver handles for you \(if you're working on PC or Mac\), but in this particular case we needed to deal with compressed images \(think JPEG or PNG\) that had to be converted to the platform\-specific swizzled format at runtime. This conversion step needed to be fast, and it needed to support updating arbitrary subrects of an image---that last requirement being there because a\) some textures are updated dynamically from an in\-memory copy \(with dirty rectangles available\), and b\) decompression and swizzling are interleaved to prevent data falling out of the cache.
 
 Luckily, two of the platforms use texture swizzling methods that fit within the "nested tiling" schemes described above, and the third didn't quite fit into the mold but had its quirks only within the lower few bits, which essentially boils down to unrolling the lower\-level loops a bit more and modifying some of the unrolled copies to do something slightly different. But I'm getting ahead of myself.
 
@@ -104,7 +104,7 @@ offs = |y7|y6|y5|x7|x6|x5|y4|y3|x4|x3|y2|y1|y0|x2|x1|x0|c1|c0|
 
 which is a 8x8\-inside\-32x32 tile pattern with no channel reordering. Ideally, we'd like to step through our texture in source order. That means our loop structure looks something like this:
 
-```
+```cpp
   for (y=y0; y < y1; y++) {
     U32 *src = (U32 *) (src + y * src_pitch);
     for (x=x0; x < x1; x++) {
@@ -128,7 +128,7 @@ offs = |y7|y6|y5| 0| 0| 0|y4|y3| 0| 0|y2|y1|y0| 0| 0| 0| 0| 0|
 
 I use "\+" and not "\|" for two reasons: First, a lot of processors have addressing modes using the sum of two registers, but none that I know have addressing modes that bitwise\-or two registers together. Second, the actual addressing computation is something like `dest + (offs_y | offs_x)`, and if we express it as a sum, we can compute it as `(dest + offs_y) + offs_x` instead; the first term is constant per line, so it only needs to be computed once. The updated loop structure looks like this:
 
-```
+```cpp
   U32 offs_x0 = swizzle_x(x0); // offset in *bytes*
   U32 offs_y  = swizzle_y(y0); // dto
 
@@ -158,20 +158,20 @@ offs_x' = | 0| 0| 0|x7|x6|x5| 0| 0|x4|x3| 0| 0| 0|x2|x1|x0| 0| 0|
           +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 ```
 
-That is, we take all the "holes" left to the first x\-bit \(x0\), set them to 1, also set the location of bit x0 to 1, and add that to `offs_x`. The result will likely have some of the "hole" bits set, which we don't want, so we have to follow this with a bitwise AND to clear them again. We could implement this right now \(cost: one add and a bitwise and, that's very reasonable\), but it pays to think some more about the magic constants we need. And\-mask first: That's easy. We just need something that's 1 wherever "x"\-bits are. Let's call that `x_mask`. The second is the value to add. Start with `~x_mask` \- this has 1\-bits in all the holes. It also has 1\-bits after the last x\-bit \(no problem, we clear those bits every iteration anyway\) and before the first "x"\-bit. We can use that last fact to avoid having to determine the position of "x0" so we can put a strategical 1 there: Just add a 1 at the very first bit and let it ripple through to the position of x0! \(That's the same trick as using the 1\-bits to skip over holes\). Putting it all together, we get:
+That is, we take all the "holes" left to the first x\-bit \(x0\), set them to 1, also set the location of bit x0 to 1, and add that to `offs_x`. The result will likely have some of the "hole" bits set, which we don't want, so we have to follow this with a bitwise AND to clear them again. We could implement this right now \(cost: one add and a bitwise and, that's very reasonable\), but it pays to think some more about the magic constants we need. And\-mask first: That's easy. We just need something that's 1 wherever "x"\-bits are. Let's call that `x_mask`. The second is the value to add. Start with `~x_mask`---this has 1\-bits in all the holes. It also has 1\-bits after the last x\-bit \(no problem, we clear those bits every iteration anyway\) and before the first "x"\-bit. We can use that last fact to avoid having to determine the position of "x0" so we can put a strategical 1 there: Just add a 1 at the very first bit and let it ripple through to the position of x0! \(That's the same trick as using the 1\-bits to skip over holes\). Putting it all together, we get:
 
-```
+```cpp
   // update offs_x:
   offs_x = (offs_x + (~x_mask + 1)) & x_mask;
 ```
 
 which can be further simplified \(if you know your two's complement identities\) into:
 
-```
+```cpp
   offs_x = (offs_x - x_mask) & x_mask;
 ```
 
-In short, we don't even need two registers to hold the two constants \- if we use this formulation, the constant argument to the sub and the and\-mask are the same! And `x_mask` \(and `y_mask`\) are in fact the only details about the swizzle pattern that ever enter into the whole swizzling loop. You can use the same loop for different patterns \- all you need are the right masks. This is great if the exact swizzle pattern depends on the data, like the "nonsquare\-Morton" scheme described above. The complete inner loop above can be compiled into four PowerPC instructions per pixel \(plus loop control\): `lwzu, subf, stwx, and`. Details are left as an exercise to the reader :\)
+In short, we don't even need two registers to hold the two constants---if we use this formulation, the constant argument to the sub and the and\-mask are the same! And `x_mask` \(and `y_mask`\) are in fact the only details about the swizzle pattern that ever enter into the whole swizzling loop. You can use the same loop for different patterns---all you need are the right masks. This is great if the exact swizzle pattern depends on the data, like the "nonsquare\-Morton" scheme described above. The complete inner loop above can be compiled into four PowerPC instructions per pixel \(plus loop control\): `lwzu, subf, stwx, and`. Details are left as an exercise to the reader :\)
 
 This directly leads to a nice function to swizzle handle the non\-aligned parts of the image subrect. And you can use the same approach to update destination pointers between 4x4 \(8x4\) tiles in the "big loop"; you just modify `x_mask` and `y_mask` by clearing the lowest few x/y bits.
 
@@ -185,7 +185,7 @@ Luckily, this is very easy to fix: the `y_mask` is already set up to include all
 
 The final code looks like this:
 
-```
+```cpp
   U32 offs_x0 = swizzle_x(x0); // offset in *bytes*
   U32 offs_y  = swizzle_y(y0); // dto
   U32 x_mask  = swizzle_x(~0u);
@@ -211,11 +211,11 @@ The final code looks like this:
   }
 ```
 
-Note that I use `swizzle_x` \(which swizzles x\-coordinates\) and `swizzle_y` to also compute what `x_mask` and `y_mask` are, by swizzling ~0 \(i.e. all 1 bits, otherwise known as \-1\). If you want this to work correctly, both functions need to follow the rules outlined in the text above \- i.e. `swizzle_x` handles both swizzled x\-part and tile index, while `swizzle_y` ignores the tile index \(that's why there's some adjustment after the initialization to point offs\_x0 to the right row of tiles\).
+Note that I use `swizzle_x` \(which swizzles x\-coordinates\) and `swizzle_y` to also compute what `x_mask` and `y_mask` are, by swizzling ~0 \(i.e. all 1 bits, otherwise known as \-1\). If you want this to work correctly, both functions need to follow the rules outlined in the text above---i.e. `swizzle_x` handles both swizzled x\-part and tile index, while `swizzle_y` ignores the tile index \(that's why there's some adjustment after the initialization to point offs\_x0 to the right row of tiles\).
 
 ### Conclusion and generalizations
 
-This code is fully generic and can handle *any* swizzling pattern that can be expressed as some form of nested tiling, with regular row\-major array indexing at the tile level. You need to provide the correct swizzle functions, but they're only used once at the beginning, so their speed is not that important. And of course, it's still at least 4 operations per pixel \- you really want to combine this with an optimized loop that writes whole destination cache lines as a time, as outlined earlier. The loop incrementing works exactly the same. But if you're processing e.g. 8x4 tiles, you want to increment the x\-coordinate by 8 and the y coordinate by 4 in every iteration. As long as you're increment in power\-of\-2 sized steps, you can use the exact same code. The only modification is that you now initialize `x_mask` as `swizzle_x(~0u << 3) == swizzle_x((U32) -8)`. `y_mask` works analogously. And finally, of course you can also step in now\-power\-of\-2 increments, but in that case you need to perform the increment using something like `offs_x = (offs_x - swizzle_x(-5)) & swizzle_x(-1);` \(hoisting constants of course\). In other words, you need to spend an extra register and get a tiny bit more setup work.
+This code is fully generic and can handle *any* swizzling pattern that can be expressed as some form of nested tiling, with regular row\-major array indexing at the tile level. You need to provide the correct swizzle functions, but they're only used once at the beginning, so their speed is not that important. And of course, it's still at least 4 operations per pixel---you really want to combine this with an optimized loop that writes whole destination cache lines as a time, as outlined earlier. The loop incrementing works exactly the same. But if you're processing e.g. 8x4 tiles, you want to increment the x\-coordinate by 8 and the y coordinate by 4 in every iteration. As long as you're increment in power\-of\-2 sized steps, you can use the exact same code. The only modification is that you now initialize `x_mask` as `swizzle_x(~0u << 3) == swizzle_x((U32) -8)`. `y_mask` works analogously. And finally, of course you can also step in now\-power\-of\-2 increments, but in that case you need to perform the increment using something like `offs_x = (offs_x - swizzle_x(-5)) & swizzle_x(-1);` \(hoisting constants of course\). In other words, you need to spend an extra register and get a tiny bit more setup work.
 
 Finally, the same approach can be extended to volume textures. You end up with 3 components for the offset \(`offs_x`, `offs_y` and `offs_z`\) with their respective bit masks, but the underlying ideas are exactly the same.
 
