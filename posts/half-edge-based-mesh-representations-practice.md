@@ -1,6 +1,6 @@
+-parent=debris-opening-the-box
 -title=Half-edge based mesh representations: practice
 -time=2012-03-25 01:49:13
-*This post is part of the series "[Debris: Opening the box](*debris-opening-the-box)".*
 
 Welcome back. Now that I've covered the underlying ideas behind the mesh data structure used in GenMesh \(the older out of two mesh generators used in "Debris"\), this post will focus on the practical considerations; it turns out that most mesh operations we need can be expressed in terms of a small number of primitive transformations. But I'll start with some practicalities of representing our data structure.
 

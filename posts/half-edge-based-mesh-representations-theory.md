@@ -1,6 +1,6 @@
+-parent=debris-opening-the-box
 -title=Half-edge based mesh representations: theory
 -time=2012-02-21 08:38:07
-*This post is part of the series "[Debris: Opening the box](*debris-opening-the-box)".*
 
 Okay, based on my quick poll [here](*debris-opening-the-box), most people would like me to write a bit about the implementations \(there are two\) of half\-edges used in "debris", so that's where I'll start. My initial plan is for this to be a three\-part series \(as outlined in the original post\). We'll see how that goes.
 

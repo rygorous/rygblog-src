@@ -1,6 +1,6 @@
+-parent=debris-opening-the-box
 -title=Fast blurs 1
 -time=2012-07-30 07:44:08
-*This post is part of the series “[Debris: Opening the box](*debris-opening-the-box)“.*
 
 A bit of context first. As I explained [before](*genthree-overview), the texture generators in RG2 / GenThree / Werkkzeug3 / Werkkzeug4 all use 16 bits of storage per color channel, with the actual values using only 15 bits \(to work around some issues with the original MMX instruction set\). Generated textures tend to go through lots of intermediate stages, and experience with some older texture generation experiments taught me that rounding down to 8 bits after every step comes at a noticeable cost in both quality and user convenience.
 

@@ -1,6 +1,6 @@
+-parent=debris-opening-the-box
 -title=If in doubt, go to the source
 -time=2012-04-15 19:18:55
-*This post is part of the series "[Debris: Opening the box](*debris-opening-the-box)".*
 
 As mentioned in the introduction to this series, our various demo tools contain a lot of cool ideas, but also a lot of bad ones that didn't work out, and the code has suffered as a result. Nevertheless, the code makes for an interesting historical document if nothing else, and we \(Farbrausch\), after some deliberation, decided to just open it up \- something we've been planning to do for ages, but were never able to pull of for various legal reasons. Well, all of those problems have gone away over the past year, so there was no good reason left to *not* publish the source.
 

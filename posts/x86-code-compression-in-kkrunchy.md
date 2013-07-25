@@ -1,3 +1,4 @@
+-parent=debris-opening-the-box
 -title=x86 code compression in kkrunchy
 -time=2011-01-24 11:26:37
 This is about the "secret ingredient" in my EXE packer kkrunchy, which was used in our \(Farbrausch\) 64k intros starting from "fr\-030: Candytron", and also in a lot of other 64k intros or similarly size\-limited productions by other groups \- including several well\-known 64ks from other groups such as Conspiracy, Equinox and Fairlight, I'm happy to add.

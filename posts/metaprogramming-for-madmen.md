@@ -1,6 +1,6 @@
+-parent=debris-opening-the-box
 -title=Metaprogramming for madmen
 -time=2012-04-08 09:04:41
-*This post is part of the series "[Debris: Opening the box](*debris-opening-the-box)".*
 
 Okay, previous posts from this series aimed to actually convey useful technical information: assuming you actually want to write say a mesh generator, there's definitely useful bits there.
 

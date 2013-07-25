@@ -1,6 +1,6 @@
+-parent=debris-opening-the-box
 -title=Fast blurs 2
 -time=2012-08-01 07:32:52
-*This post is part of the series “[Debris: Opening the box](*debris-opening-the-box)“.*
 
 At the end of the last post, I described the basic "moving average" implementation for box filters and how to build a simple blur out of it. I also noted that the approach given only offers very coarse control of the blur radius, and that we'd like to have something better than box filters. So let's fix both of these issues.
 

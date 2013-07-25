@@ -1,6 +1,6 @@
+-parent=debris-opening-the-box
 -title=GenThree Overview
 -time=2012-04-16 03:55:55
-*This post is part of the series "[Debris: Opening the box](*debris-opening-the-box)".*
 
 Now that the code is released, I'm going to change things up a bit. Originally, I was going to describe Werkkzeug 3's operator execution engine in isolation; but now there's enough material to give you the story in the proper order, with all the false starts and backtracking that went into it, which should explain some of the design quirks of the final result. Because it all starts with GenThree, the tool we wrote for [Candytron](http://www.farbrausch.com/prod.py?which=39) \(Note: I originally wrote this text for the `fr_public` repository\).
 
