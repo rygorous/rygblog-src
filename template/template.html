@@ -6,18 +6,18 @@
     <meta name="viewport" content="width=1024">
     <link rel="stylesheet" href="static/style.css" type="text/css">
     <link rel="alternate" href="{{.Blog.AtomFeedFile}}" type="application/atom+xml">
-    {{if .Post.MathJax}}
+    {{if .Root.MathJax}}
     <script type="text/x-mathjax-config">
       MathJax.Hub.Config({
         jax: ["input/TeX", "output/HTML-CSS"],
-        "HTML-CSS": { availableFonts: ["TeX"] }
+        TeX: { extensions: ["AMSmath.js"] },
       });
     </script>
     <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js" type="text/javascript"></script>
     {{end}}
-    {{if .Post.BlockCode}}<link rel="stylesheet" href="static/prism.css" type="text/css">
+    {{if .Root.BlockCode}}<link rel="stylesheet" href="static/prism.css" type="text/css">
     <script src="static/prism.js" type="text/javascript"></script>
-    {{end}}<title>{{.Blog.Title}}: {{.Post.Title}}</title>
+    {{end}}<title>{{.Blog.Title}}: {{.Root.Title}}</title>
   </head>
   <body>
     <header>
@@ -29,7 +29,7 @@
     <nav>
       <div class="container">
         <ul>
-          <li{{if not .Post.Type}} class="active"{{end}}><a href="{{.Blog.MostRecent.Href}}">Blog</a></li>{{range .Blog.Pages}}
+          <li{{if not .Root.Type}} class="active"{{end}}><a href="{{.Blog.MostRecent.Href}}">Blog</a></li>{{range .Blog.Pages}}
           <li{{if .Active}} class="active"{{end}}><a href="{{.Href}}">{{.Title}}</a></li>{{end}}
           <li><a href="{{.Blog.AtomFeedFile}}">Subscribe&nbsp;<img src="static/feed-icon.png" width=14 height=14 alt="Feed"></a>
           <li>
@@ -45,15 +45,15 @@
     </nav>
     <div class="container">
       <div id="content">
-        <div id="posts">
+        <div id="posts">{{range .Docs}}
           <article>
-            <header>{{if not .Post.Published.IsZero}}
-              <time>{{with .Post.Published.Local}}{{printf "%d-%02d-%02d" .Year .Month .Day}}{{end}}</time>{{end}}
-              <h1><a href="{{.Post.Href}}">{{.Post.Title}}</a></h1>
+            <header>{{if not .Published.IsZero}}
+              <time>{{with .Published.Local}}{{printf "%d-%02d-%02d" .Year .Month .Day}}{{end}}</time>{{end}}
+              <h1><a href="{{.Href}}">{{.Title}}</a></h1>
             </header>
-            {{with .Post.Parent}}<p><em>This post is part of the series &ldquo;<a href="{{.Href}}">{{.Title}}</a>&rdquo;.</em></p>{{end}}
-            {{.Post.Content}}
-          </article>
+            {{with .Parent}}<p><em>This post is part of the series &ldquo;<a href="{{.Href}}">{{.Title}}</a>&rdquo;.</em></p>{{end}}
+            {{.Content}}
+          </article>{{end}}
           <nav>
             {{with .Next}}<div class="next"><a href="{{.Href}}">Newer: {{.Title}}</a></div>{{end}}
             {{with .Prev}}<div class="prev"><a href="{{.Href}}">Older: {{.Title}}</a></div>{{end}}

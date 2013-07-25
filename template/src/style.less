@@ -16,7 +16,11 @@
 @contentpad:        15px;
 @sidebarmargin:     @contentpad;
 @sidebarwidth:      250px;
+@bigsidebarwidth:   350px;
 @minsidebar:        (@contentwidth + 4*@contentpad + @sidebarwidth);
+@minbigsidebar:     (@contentwidth + 4*@contentpad + @bigsidebarwidth);
+
+@monospace:     Consolas, Monaco, 'Andale Mono', monospace;
 
 @font-face {
   font-family: 'Droid Serif';
@@ -52,13 +56,22 @@ body {
   color: @text;
   font-family: 'Droid Serif', Georgia, serif;
   font-size: 15px;
+  @media only print {
+    font-size: 11pt;
+  }
   line-height: 1.5em;
 }
 
-a { text-decoration: none; }
-a:link, a:visited { color: @link; }
-a:hover, a:active { color: @linkhover; }
-a:active { outline: none; }
+a {
+  text-decoration: underline;
+  color: @text;
+  @media only screen {
+    text-decoration: none;
+    &:link, &:visited { color: @link; }
+    &:hover, &:active { color: @linkhover; }
+  }
+  &:active { outline: none; }
+}
 
 .displayfont {
   font-family: Signika, sans-serif;
@@ -86,6 +99,11 @@ h2 {
 h3 {
   .displayfont;
   font-size: 130%;
+}
+
+h4 {
+  .displayfont;
+  font-size: 110%;
 }
 
 table {
@@ -117,12 +135,13 @@ a > img {
 }
 
 code, pre {
-  font-family: Consolas, Monaco, 'Andale Mono', monospace;
+  font-family: @monospace;
 }
 
 pre {
   background-color: darken(@background,5%);
   font-size: 85%;
+  overflow: auto;
 }
 
 blockquote {
@@ -156,6 +175,10 @@ article {
     display: block;
     float: right;
     margin: 1em 0 1em 1em;
+  }
+  figure figcaption {
+    text-align: center;
+    margin: .4em auto;
   }
 }
 
@@ -234,10 +257,6 @@ body > footer {
   }
 }
 
-article {
-  page-break-before: always;
-}
-
 article > header > time { color: lighten(@text,30%); }
 
 #content {
@@ -254,6 +273,10 @@ article > header > time { color: lighten(@text,30%); }
 }
 
 #posts nav {
+  display: none;
+  @media only screen {
+    display: block;
+  }
   margin-top: 4em;
   .next {
     float: left;
@@ -291,12 +314,15 @@ article > header > time { color: lighten(@text,30%); }
   @media only screen and (min-width: @minsidebar) {
     clear: none;
     float: left;
-    width: @sidebarwidth;
+    width: @bigsidebarwidth;
     margin: 0 0 0 (@sidebarmargin - 1px);
     border-left: 1px solid @rule;
     section {
       padding-left: 2em;
       text-indent: -1em;
+    }
+    @media (max-width: (@minbigsidebar - 1px)) {
+      width: @sidebarwidth;
     }
   }
 }
@@ -311,3 +337,47 @@ article > header > time { color: lighten(@text,30%); }
   }
 }
 
+/* print styling */
+
+@page {
+  margin: 1.1in 1.2in 1.5in 1.2in;
+  @top-center { content: none; }
+  @bottom-center { content: counter(page); }
+}
+
+@page :left {
+  margin-right: 1.8in;
+}
+
+@page :right {
+  margin-left: 1.8in;
+}
+
+article {
+  /* not before since we want to keep header on first page */
+  page-break-after: always;
+  widows: 3;
+  orphans: 3;
+}
+
+@media only print {
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  article {
+    a {
+      word-wrap: break-word;
+    }
+    a:after {
+      content: " (" attr(href) ")";
+      font-family: @monospace;
+      font-size: 90%;
+    }
+  }
+}
+
+article > header > h1 a {
+  text-decoration: none;
+  &:link, &:visited, &:hover, &:active { color: @text; }
+  &:after { content: ""; }
+}
