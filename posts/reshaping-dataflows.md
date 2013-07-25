@@ -12,19 +12,19 @@ But back to the topic at hand: improving dataflow. The problem is that, unlike t
 
 A good example is the member variable `TransformedAABBoxSSE::mVisible`, declared like this:
 
-```
+```cpp
 bool *mVisible;
 ```
 
 A pointer to a bool. So where does that pointer come from?
 
-```
+```cpp
 inline void SetVisible(bool *visible){mVisible = visible;}
 ```
 
 It turns out that the constructor initializes this pointer to `NULL`, and the only method that ever does anything with `mVisible` is `RasterizeAndDepthTestAABBox`, which executes `*mVisible = true;` if the bounding box is found to be visible. So how does this all get used?
 
-```
+```cpp
 mpVisible[i] = false;
 mpTransformedAABBox[i].SetVisible(&mpVisible[i]);
 if(...)
@@ -42,7 +42,7 @@ Anyway, making this return value explicit is really basic, so I'm not gonna walk
 
 In the depth test rasterizer, right after determining the bounding box, there's this piece of code:
 
-```
+```cpp
 for(int vv = 0; vv < 3; vv++) 
 {
     // If W (holding 1/w in our case) is not between 0 and 1,
@@ -50,8 +50,7 @@ for(int vv = 0; vv < 3; vv++)
     // If W < 1 (for W>0), and 1/W < 0 (for W < 0).
     VecF32 nearClipMask0 = cmple(xformedPos[vv].W, VecF32(0.0f));
     VecF32 nearClipMask1 = cmpge(xformedPos[vv].W, VecF32(1.0f));
-    VecS32 nearClipMask = float2bits(or(nearClipMask0,
-        nearClipMask1));
+    VecS32 nearClipMask = float2bits(or(nearClipMask0, nearClipMask1));
 
     if(!is_all_zeros(nearClipMask))
     {
@@ -66,15 +65,13 @@ Okay. The transform code sets things up so that the "w" component of the screen\
 
 So here's the thing: there's really no reason to do this check *after* we're done with triangle setup. Nor do we even have to gather the 3 triangle vertices to discover that one of them is in front of the near plane. A box has 8 vertices, and we'll know whether any of them are in front of the near plane as soon as we're done transforming them, before we even think about triangle setup! So let's look at the function that transforms the vertices:
 
-```
+```cpp
 void TransformedAABBoxSSE::TransformAABBox()
 {
     for(UINT i = 0; i < AABB_VERTICES; i++)
     {
-        mpXformedPos[i] = TransformCoords(&mpBBVertexList[i],
-            mCumulativeMatrix);
-        float oneOverW = 1.0f/max(mpXformedPos[i].m128_f32[3],
-            0.0000001f);
+        mpXformedPos[i] = TransformCoords(&mpBBVertexList[i], mCumulativeMatrix);
+        float oneOverW = 1.0f/max(mpXformedPos[i].m128_f32[3], 0.0000001f);
         mpXformedPos[i] = mpXformedPos[i] * oneOverW;
         mpXformedPos[i].m128_f32[3] = oneOverW;
     }
@@ -93,15 +90,14 @@ Even better, if we test for near\-clip anyway, there's no need to clamp w at all
 
 And on the subject of not rasterizing the box: as I said earlier, as soon as one vertex is outside the near\-plane, we know we're going to return `true` from the depth test rasterizer, so there's no point even starting the operation. To facilitate this, we just make `TransformAABBox` return whether the box should be rasterized or not. Putting it all together:
 
-```
+```cpp
 bool TransformedAABBoxSSE::TransformAABBox()
 {
     __m128 zAllIn = _mm_castsi128_ps(_mm_set1_epi32(~0));
 
     for(UINT i = 0; i < AABB_VERTICES; i++)
     {
-        __m128 vert = TransformCoords(&mpBBVertexList[i],
-            mCumulativeMatrix);
+        __m128 vert = TransformCoords(&mpBBVertexList[i], mCumulativeMatrix);
 
         // We have inverted z; z is inside of near plane iff z <= w.
         __m128 vertZ = _mm_shuffle_ps(vert, vert, 0xaa); //vert.zzzz
@@ -122,7 +118,7 @@ In case you're wondering why this code uses raw SSE intrinsics and not `VecF32`,
 
 And once we have this return value from `TransformAABBox`, we get to remove the near\-clip test from the depth test rasterizer, *and* we get to move our early\-out for near\-clipped boxes all the way to the call site:
 
-```
+```cpp
 if(mpTransformedAABBox[i].TransformAABBox())
     mpVisible[i] = mpTransformedAABBox[i].RasterizeAndDepthTestAABBox(...);
 else
@@ -153,34 +149,29 @@ Another 0.06ms off our median depth test time, which may not sound big but is ov
 
 The bounding box rasterizer has one more method that's called per\-box though, and this is one that really deserves some special attention. Meet `IsTooSmall`:
 
-```
-bool TransformedAABBoxSSE::IsTooSmall(__m128 *pViewMatrix,
-    __m128 *pProjMatrix, CPUTCamera *pCamera)
+```cpp
+bool TransformedAABBoxSSE::IsTooSmall(__m128 *pViewMatrix, __m128 *pProjMatrix,
+    CPUTCamera *pCamera)
 {
-    float radius = mBBHalf.lengthSq(); // Use length-squared to
-    // avoid sqrt().  Relative comparisons hold.
+    float radius = mBBHalf.lengthSq(); // Use length-squared to avoid sqrt().
+    // Relative comparisons hold.
 
     float fov = pCamera->GetFov();
     float tanOfHalfFov = tanf(fov * 0.5f);
 
     MatrixMultiply(mWorldMatrix, pViewMatrix, mCumulativeMatrix);
-    MatrixMultiply(mCumulativeMatrix, pProjMatrix,
-        mCumulativeMatrix);
-    MatrixMultiply(mCumulativeMatrix, mViewPortMatrix,
-        mCumulativeMatrix);
+    MatrixMultiply(mCumulativeMatrix, pProjMatrix, mCumulativeMatrix);
+    MatrixMultiply(mCumulativeMatrix, mViewPortMatrix, mCumulativeMatrix);
 
-    __m128 center = _mm_set_ps(1.0f, mBBCenter.z, mBBCenter.y,
-        mBBCenter.x);
-    __m128 mBBCenterOSxForm = TransformCoords(&center,
-        mCumulativeMatrix);
+    __m128 center = _mm_set_ps(1.0f, mBBCenter.z, mBBCenter.y, mBBCenter.x);
+    __m128 mBBCenterOSxForm = TransformCoords(&center, mCumulativeMatrix);
     float w = mBBCenterOSxForm.m128_f32[3];
     if( w > 1.0f )
     {
         float radiusDivW = radius / w;
         float r2DivW2DivTanFov = radiusDivW / tanOfHalfFov;
 
-        return r2DivW2DivTanFov <
-            (mOccludeeSizeThreshold * mOccludeeSizeThreshold);
+        return r2DivW2DivTanFov < (mOccludeeSizeThreshold * mOccludeeSizeThreshold);
     }
 
     return false;
@@ -199,7 +190,7 @@ Note that `MatrixMultiply(A, B, C)` performs `C = A * B`; the rest should be eas
 
 All these things are common problems that I must have fixed a hundred times, but I have to admit that it's pretty rare to see so many of them in a single page of code. Anyway, rather than fixing these one by one, let's just cut to the chase: instead of all the redundant computations, we just move everything that only depends on the camera \(or is global\) into a single struct that holds our setup, which I dubbed `BoxTestSetup`. Here's the code:
 
-```
+```cpp
 struct BoxTestSetup
 {
     __m128 mViewProjViewport[4];
@@ -222,28 +213,23 @@ void BoxTestSetup::Init(const __m128 viewMatrix[4],
     viewPortMatrix[3] = _mm_loadu_ps((float*)&viewportMatrix.r3);
 
     MatrixMultiply(viewMatrix, projMatrix, mViewProjViewport);
-    MatrixMultiply(mViewProjViewport, viewPortMatrix,
-        mViewProjViewport);
+    MatrixMultiply(mViewProjViewport, viewPortMatrix, mViewProjViewport);
 
     float fov = pCamera->GetFov();
     float tanOfHalfFov = tanf(fov * 0.5f);
-    radiusThreshold = occludeeSizeThreshold * occludeeSizeThreshold
-        * tanOfHalfFov;
+    radiusThreshold = occludeeSizeThreshold * occludeeSizeThreshold * tanOfHalfFov;
 }
 ```
 
 This is initialized once we start culling and simply kept on the stack. Then we just pass it to `IsTooSmall`, which after our [surgery](https://github.com/rygorous/intel_occlusion_cull/commit/2411249a28f9918fc574648d5c79af2fe702c1f8) looks like this:
 
-```
+```cpp
 bool TransformedAABBoxSSE::IsTooSmall(const BoxTestSetup &setup)
 {
-    MatrixMultiply(mWorldMatrix, setup.mViewProjViewport,
-        mCumulativeMatrix);
+    MatrixMultiply(mWorldMatrix, setup.mViewProjViewport, mCumulativeMatrix);
 
-    __m128 center = _mm_set_ps(1.0f, mBBCenter.z, mBBCenter.y,
-        mBBCenter.x);
-    __m128 mBBCenterOSxForm = TransformCoords(&center,
-        mCumulativeMatrix);
+    __m128 center = _mm_set_ps(1.0f, mBBCenter.z, mBBCenter.y, mBBCenter.x);
+    __m128 mBBCenterOSxForm = TransformCoords(&center, mCumulativeMatrix);
     float w = mBBCenterOSxForm.m128_f32[3];
     if( w > 1.0f )
     {
@@ -314,7 +300,7 @@ Only about 0.03ms this time, but we also save 192 bytes \(plus allocator overhea
 
 There's one more piece of unnecessary data we currently store per bounding box: the vertex list, initialized in `CreateAABBVertexIndexList`:
 
-```
+```cpp
 float3 min = mBBCenter - bbHalf;
 float3 max = mBBCenter + bbHalf;
         
@@ -338,7 +324,7 @@ But more importantly, note that the we only ever use two distinct values for x, 
 
 and because we know that `v.x` is either `min.x` or `max.x`, we can multiply both by `M.row[0]` once and store the result. Then the 8 individual vertices can skip the multiplies altogether. Putting it all together leads to the following new code for `TransformAABBox`:
 
-```
+```cpp
 // 0 = use min corner, 1 = use max corner
 static const int sBBxInd[AABB_VERTICES] = { 1, 0, 0, 1, 1, 1, 0, 0 };
 static const int sBByInd[AABB_VERTICES] = { 1, 1, 1, 1, 0, 0, 0, 0 };

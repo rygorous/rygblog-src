@@ -30,7 +30,7 @@ How bad can it possibly be? Let me show you an example. Here's an excerpt of a V
 
 As you can see, a lot of time is being spent in `CPUTModelDX11::SetRenderStates`. Worse, as VTune helpfully highlights for us, this function runs at an absolutely appalling 9.721 clock cycles per instruction \(CPI Rate\)! Now it turns out that a large fraction is due to these innocent\-looking lines that write to a constant buffer:
 
-```
+```cpp
     pCb = (CPUTModelConstantBuffer*)mapInfo.pData;
     pCb->World               = world;
     pCb->ViewProjection      = view * projection;
@@ -39,7 +39,7 @@ As you can see, a lot of time is being spent in `CPUTModelDX11::SetRenderStates`
 
 Note how `pCb->ViewProjection` is used as an argument for a matrix multiply in the last line. Now, here's the simple fix:
 
-```
+```cpp
     XMMATRIX viewProj = view * projection;
     pCb = (CPUTModelConstantBuffer*)mapInfo.pData;
     pCb->World               = world;

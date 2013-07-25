@@ -16,7 +16,7 @@ What you can see here is the video memory manager going over the list of resourc
 
 So, what can we do to use less resources? There's lots of options, but one thing I had noticed while measuring loading time is that there's one dynamic constant buffer per model:
 
-```
+```cpp
 // Create the model constant buffer.
 HRESULT hr;
 D3D11_BUFFER_DESC bd = {0};
@@ -24,8 +24,7 @@ bd.ByteWidth = sizeof(CPUTModelConstantBuffer);
 bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 bd.Usage = D3D11_USAGE_DYNAMIC;
 bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-hr = (CPUT_DX11::GetDevice())->CreateBuffer( &bd, NULL,
-    &mpModelConstantBuffer );
+hr = (CPUT_DX11::GetDevice())->CreateBuffer( &bd, NULL, &mpModelConstantBuffer );
 ASSERT( !FAILED( hr ), _L("Error creating constant buffer.") );
 ```
 
@@ -119,7 +118,7 @@ And at that point, I decided that I could live with 1.5 seconds of loading time,
 
 There's one more function with a high number of cache misses in the profiles I've been running, even though it's never been at the top. That function is `AABBoxRasterizerSSE::RenderVisible`, which uses the \(post\-occlusion\-test\) visibility information to render all visible models. Here's the code:
 
-```
+```cpp
 void AABBoxRasterizerSSE::RenderVisible(CPUTAssetSet **pAssetSet,
     CPUTRenderParametersDX &renderParams,
     UINT numAssetSets)
@@ -157,7 +156,7 @@ That is a stupid game and we should stop playing it.
 
 Luckily, it's easy to fix: at load time, we traverse the scene database *once*, to make a list of all the models. Note the code already does such a pass to initialize the bounding boxes etc. for the occlusion culling pass; all we have to do is set an extra array that maps `modelId`s to the corresponding models. Then the actual rendering code turns into:
 
-```
+```cpp
 void AABBoxRasterizerSSE::RenderVisible(CPUTAssetSet **pAssetSet,
     CPUTRenderParametersDX &renderParams,
     UINT numAssetSets)

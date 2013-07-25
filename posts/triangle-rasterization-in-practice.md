@@ -8,7 +8,7 @@ Welcome back! The [previous post](*the-barycentric-conspirac) gave us a lot of t
 
 As we saw last time, we can calculate edge functions \(which produce barycentric coordinates\) as a 2x2 determinant. And we also saw last time that we can check if a point is inside, on the edge or outside a triangle simply by looking at the signs of the three edge functions at that point. Our rasterizer is going to work in integer coordinates, so let's assume for now that our triangle vertex positions and point coordinates are given as integers too. The orientation test that computes the 2x2 determinant looks like this in code:
 
-```
+```cpp
 struct Point2D {
     int x, y;
 };
@@ -21,7 +21,7 @@ int orient2d(const Point2D& a, const Point2D& b, const Point2D& c)
 
 Now, all we have to do to rasterize our triangle is to loop over candidate pixels and check whether they're inside or not. We could do it brute\-force and loop over all screen pixels, but let's try to not be completely brain\-dead about this: we do know that all pixels inside the triangle are also going to be inside an axis\-aligned bounding box around the triangle. And axis\-aligned bounding boxes are both easy to compute and trivial to traverse. This gives:
 
-```
+```cpp
 void drawTri(const Point2D& v0, const Point2D& v1, const Point2D& v2)
 {
     // Compute triangle bounding box
@@ -74,15 +74,15 @@ Since all the computations happen in `orient2d`, that's the only expression we a
 
 Luckily, it's pretty very symmetric, so there's not many different sub\-expressions we have to look at: Say we start with p\-bit signed integer coordinates. That means the individual coordinates are in \[\-2<sup>p\-1</sup>,2<sup>p\-1</sup>\-1\]. By subtracting the upper bound from the lower bound \(and vice versa\), we can determine the bounds for the difference of the two coordinates:
 
-$$-(2^p - 1) \le b_x - a_x \le 2^p - 1 \quad \Leftrightarrow \quad |b_x - a_x| \le 2^p - 1$$
+$$[-(2^p - 1) \le b_x - a_x \le 2^p - 1 \quad \Leftrightarrow \quad |b_x - a_x| \le 2^p - 1$$]
 
 And the same applies for the other three coordinate differences we compute. Next, we compute a product of two such values. Easy enough:
 
-$$|(b_x - a_x) (c_y - a_y)| \le |b_x - a_x| |c_y - a_y| = (2^p - 1)^2$$
+$$[|(b_x - a_x) (c_y - a_y)| \le |b_x - a_x| |c_y - a_y| = (2^p - 1)^2$$]
 
 Again, the same applies to the other product. Finally, we compute the difference between the two products, which doubles our bound on the absolute value:
 
-$$|\mathrm{Orient2D}(a,b,c)| \le 2 (2^p - 1)^2 = 2^{2p + 1} - 2^{p+2} + 2 \le 2^{2p + 1} - 2$$
+$$[|\mathrm{Orient2D}(a,b,c)| \le 2 (2^p - 1)^2 = 2^{2p + 1} - 2^{p+2} + 2 \le 2^{2p + 1} - 2$$]
 
 since p is always nonnegative. Accounting for the sign bit, that means the result of Orient2D fits inside a \(2p\+2\)\-bit signed integer. Since we want the results to fit inside a 32\-bit integer, that means we need $$p \le (32 - 2) / 2 = 15$$ to make sure there are no overflows. In other words, we're good as long as the input coordinates are all inside \[\-16384,16383\]. Anything poking outside that area needs to be analytically clipped beforehand to make sure there's no overflows during rasterization.
 
@@ -100,7 +100,7 @@ Now, for the application we're concerned with in this series, we're only going t
 
 But suppose that you want to actually render something user\-visible, in which case you absolutely do need sub\-pixel precision. You want at least 4 extra bits in each coordinate \(i.e. coordinates are specified in 1/16ths of a pixel\), and at this point the standard in DX11\-compliant GPUs in 8 bits of sub\-pixel precision \(coordinates in 1/256ths of a pixel\). Let's assume 8 bits of sub\-pixel precision for now. The trivial way to get this is to multiply everything by 256: our \(still integer\) coordinates are now in 1/256ths of a pixel, but we still only perform one sample each pixel. Easy enough: \(just sketching the updated main loop here\)
 
-```
+```cpp
     static const int subStep = 256;
     static const int subMask = subStep - 1;
 
@@ -160,7 +160,7 @@ To paraphrase: if our sample point actually falls inside the triangle \(not on a
 
 Now, our current rasterizer code:
 
-```
+```cpp
     int w0 = orient2d(v1, v2, p);
     int w1 = orient2d(v2, v0, p);
     int w2 = orient2d(v0, v1, p);
@@ -172,7 +172,7 @@ Now, our current rasterizer code:
 
 Draws *all* points that fall on edges, no matter which kind \- all the tests are for greater\-or\-equals to zero. That's okay for edge functions corresponding to top or left edges, but for the other edges we really want to be testing for a proper "greater than zero" instead. We could have multiple versions of the rasterizer, one for each possible combination of "edge 0/1/2 is \(not\) top\-left", but that's too horrible to contemplate. Instead, we're going to use the fact that for integers, `x > 0` and `x >= 1` mean the same thing. Which means we can leave the tests as they are by first computing a per\-edge offset once:
 
-```
+```cpp
   int bias0 = isTopLeft(v1, v2) ? 0 : -1;
   int bias1 = isTopLeft(v2, v0) ? 0 : -1;
   int bias2 = isTopLeft(v0, v1) ? 0 : -1;
@@ -180,7 +180,7 @@ Draws *all* points that fall on edges, no matter which kind \- all the tests are
 
 and then changing our edge function computation slightly:
 
-```
+```cpp
     int w0 = orient2d(v1, v2, p) + bias0;
     int w1 = orient2d(v2, v0, p) + bias1;
     int w2 = orient2d(v0, v1, p) + bias2;

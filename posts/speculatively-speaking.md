@@ -41,7 +41,7 @@ So what are the conditions? The details depend on the core in question. Generall
 
 Which brings us back to the example at hand: what's going on in those functions, `BinTransformedTrianglesMT` in particular? Some investigation of the compiled code shows that the first sign of blocked loads is near these reads:
 
-```
+```cpp
 Gather(xformedPos, index, numLanes);
                 
 vFxPt4 xFormedFxPtPos[3];
@@ -56,9 +56,8 @@ for(int i = 0; i < 3; i++)
 
 and looking at the code for `Gather` shows us exactly what's going on:
 
-```
-void TransformedMeshSSE::Gather(vFloat4 pOut[3], UINT triId,
-    UINT numLanes)
+```cpp
+void TransformedMeshSSE::Gather(vFloat4 pOut[3], UINT triId, UINT numLanes)
 {
     for(UINT l = 0; l < numLanes; l++)
     {
@@ -78,9 +77,8 @@ Aha! This is the code that transforms our vertices from the AoS \(array of struc
 
 So how do we fix it? Well, we'd really like those vectors to be written using full\-width SIMD stores instead. Luckily, that's not too hard: converting data from AoS to SoA is essentially a matrix transpose, and our typical use case happens to be 4 separate 4\-vectors, i.e. a 4x4 matrix; luckily, a 4x4 matrix transpose is fairly easy to do in SSE, and Intel's intrinsics header file even comes with a macro that implements it. So here's the updated `Gather` that uses a SSE transpose:
 
-```
-void TransformedMeshSSE::Gather(vFloat4 pOut[3], UINT triId,
-    UINT numLanes)
+```cpp
+void TransformedMeshSSE::Gather(vFloat4 pOut[3], UINT triId, UINT numLanes)
 {
     const UINT *pInd0 = &mpIndices[triId * 3];
     const UINT *pInd1 = pInd0 + (numLanes > 1 ? 3 : 0);
@@ -159,20 +157,17 @@ So we're another 0.13ms down, about 0.04ms of which we gain in the depth testing
 
 [Last time](*reshaping-dataflows), we modified the vertex transform code in the depth test rasterizer to get rid of the z\-clamping and simplify the clipping logic. We also changed the logic to make better use of the regular structure of our input vertices. We don't have any special structure we can use to make vertex transforms on regular meshes faster, but we definitely can \(and should\) improve the projection and near\-clip logic, turning this:
 
-```
-mpXformedPos[i] = TransformCoords(&mpVertices[i].position,
-    cumulativeMatrix);
+```cpp
+mpXformedPos[i] = TransformCoords(&mpVertices[i].position, cumulativeMatrix);
 float oneOverW = 1.0f/max(mpXformedPos[i].m128_f32[3], 0.0000001f);
-mpXformedPos[i] = _mm_mul_ps(mpXformedPos[i],
-    _mm_set1_ps(oneOverW));
+mpXformedPos[i] = _mm_mul_ps(mpXformedPos[i], _mm_set1_ps(oneOverW));
 mpXformedPos[i].m128_f32[3] = oneOverW;
 ```
 
 into this:
 
-```
-__m128 xform = TransformCoords(&mpVertices[i].position,
-    cumulativeMatrix);
+```cpp
+__m128 xform = TransformCoords(&mpVertices[i].position, cumulativeMatrix);
 __m128 vertZ = _mm_shuffle_ps(xform, xform, 0xaa);
 __m128 vertW = _mm_shuffle_ps(xform, xform, 0xff);
 __m128 projected = _mm_div_ps(xform, vertW);
@@ -194,7 +189,7 @@ And if we profile again, we notice there's at least one more surprise waiting fo
 
 Machine clears? We've seen them before, way back in "[Cores don't like to share](*cores-dont-like-to-share)". And yes, they're again for memory ordering reasons. What did we do wrong this time? It turns out that the problematic code has been in there since the beginning, and ran just fine for quite a while, but ever since the scheduling optimizations we did in "[The care and feeding of worker threads](*care-and-feeding-of-worker-threads-part-1)", we now have binning jobs running tightly packed enough to run into memory ordering issues. So what's the problem? Here's the code:
 
-```
+```cpp
 // Add triangle to the tiles or bins that the bounding box covers
 int row, col;
 for(row = startY; row <= endY; row++)
@@ -285,13 +280,12 @@ At this point, the binner is starting to look fairly good, but there's one more 
 
 Branch mispredictions. Now, the two rasterizers have legitimate reason to be mispredicting branches some of the time \- they're processing triangles with fairly unpredictable sizes, and the depth test rasterizer also has an early\-out that's hard to predict. But the binner has less of an excuse \- sure, the triangles have very different dimensions measured *in 2x2 pixel blocks*, but the vast majority of our triangles fits inside one of our \(generously sized!\) 320x90 pixel tiles. So where are all these branches?
 
-```
+```cpp
 for(int i = 0; i < numLanes; i++)
 {
     // Skip triangle if area is zero 
     if(triArea.lane[i] <= 0) continue;
-    if(vEndX.lane[i] < vStartX.lane[i] ||
-       vEndY.lane[i] < vStartY.lane[i]) continue;
+    if(vEndX.lane[i] < vStartX.lane[i] || vEndY.lane[i] < vStartY.lane[i]) continue;
                         
     float oneOverW[3];
     for(int j = 0; j < 3; j++)
@@ -299,8 +293,7 @@ for(int i = 0; i < numLanes; i++)
                         
     // Reject the triangle if any of its verts are outside the
     // near clip plane
-    if(oneOverW[0] == 0.0f || oneOverW[1] == 0.0f ||
-        oneOverW[2] == 0.0f) continue;
+    if(oneOverW[0] == 0.0f || oneOverW[1] == 0.0f || oneOverW[2] == 0.0f) continue;
 
     // ...
 }
@@ -312,7 +305,7 @@ However, there's no need for them to be done like this; right now, we have a who
 
 Of course we can. The basic idea is to do all the tests on 4 triangles at a time, while we're still in SIMD form:
 
-```
+```cpp
 // Figure out which lanes are active
 VecS32 mFront = cmpgt(triArea, VecS32::zero());
 VecS32 mNonemptyX = cmpgt(vEndX, vStartX);
@@ -333,14 +326,14 @@ Note I change the "is not near\-clipped test" from `!(w == 0.0f)` to `w > 0.0f`,
 
 With this, we could turn all the original branches into a single test in the `i` loop:
 
-```
+```cpp
 if((triMask & (1 << i)) == 0)
     continue;
 ```
 
 However, we can do slightly better than that: it turns out we can iterate pretty much directly over the set bits in `triMask`, which means we're now down to one single branch in the outer loop \- the loop counter itself. The modified loop looks like this:
 
-```
+```cpp
 while(triMask)
 {
     int i = FindClearLSB(&triMask);
@@ -350,7 +343,7 @@ while(triMask)
 
 So what does the magic `FindClearLSB` function do? It better not contain any branches! But lucky for us, it's quite straightforward:
 
-```
+```cpp
 // Find index of least-significant set bit in mask
 // and clear it (mask must be nonzero)
 static int FindClearLSB(unsigned int *mask)

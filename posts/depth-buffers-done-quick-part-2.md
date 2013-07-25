@@ -12,7 +12,7 @@ I've used this kind of approach in the past to provide a useful common subset of
 
 Anyway, I won't go over the details of either the helper classes \(it's fairly basic stuff\) or the modifications to the code \(just glorified search and replace\), but I will show you one before\-after example to illustrate why I did it:
 
-```
+```cpp
 col = _mm_add_epi32(colOffset, _mm_set1_epi32(startXx));
 __m128i aa0Col = _mm_mullo_epi32(aa0, col);
 __m128i aa1Col = _mm_mullo_epi32(aa1, col);
@@ -30,7 +30,7 @@ __m128i sum2Row = _mm_add_epi32(aa2Col, bb2Row);
 
 turns into:
 
-```
+```cpp
 VecS32 col = colOffset + VecS32(startXx);
 VecS32 aa0Col = aa0 * col;
 VecS32 aa1Col = aa1 * col;
@@ -48,7 +48,7 @@ VecS32 sum2Row = aa2Col + bb2Row;
 
 I don't know about you, but I already find this *much* easier to parse visually, and the generated code is the same. And as soon as I had this, I just got rid of most of the explicit temporaries since they're never referenced again anyway:
 
-```
+```cpp
 VecS32 col = VecS32(startXx) + colOffset;
 VecS32 row = VecS32(startYy) + rowOffset;
 
@@ -85,7 +85,7 @@ And just to prove that it really didn't change the performance:
 
 With that out of the way, let's spiral further outwards and have a look at our triangle setup code. Most of it sets up edge equations etc. for 4 triangles at a time; we only drop down to individual triangles once we're about to actually rasterize them. Most of this code works exactly as we saw in ["Optimizing the basic rasterizer"](*optimizing-the-basic-rasterizer), but there's one bit that performs a bit more work than necessary:
 
-```
+```cpp
 // Compute triangle area
 VecS32 triArea = A0 * xFormedFxPtPos[0].X;
 triArea += B0 * xFormedFxPtPos[0].Y;
@@ -96,14 +96,14 @@ VecF32 oneOverTriArea = VecF32(1.0f) / itof(triArea);
 
 Contrary to what the comment says :\), this actually computes twice the \(signed\) triangle area and is used to normalize the barycentric coordinates. That's also why there's a divide to compute its reciprocal. However, the computation of the area itself is more complicated than necessary and depends on `C0`. A better way is to just use the direct determinant expression. Since the area is computed in integers, this gives exactly the same results with one operations less, and without the dependency on `C0`:
 
-```
+```cpp
 VecS32 triArea = B2 * A1 - B1 * A2;
 VecF32 oneOverTriArea = VecF32(1.0f) / itof(triArea);
 ```
 
 And talking about the barycentric coordinates, there's also this part of the setup that is performed per triangle, not across 4 triangles:
 
-```
+```cpp
 VecF32 zz[3], oneOverW[3];
 for(int vv = 0; vv < 3; vv++)
 {
@@ -118,7 +118,7 @@ zz[2] = (zz[2] - zz[0]) * oneOverTotalArea;
 
 The latter two lines perform the half\-barycentric interpolation setup; the original code multiplied the `zz[i]` by `oneOverTotalArea` here \(this is the normalization for the barycentric terms\). But note that all the quantities involved here are vectors of four broadcast values; these are really scalar computations, and we can perform them while we're still dealing with 4 triangles at a time! So right after the triangle area computation, we now do this:
 
-```
+```cpp
 // Z setup
 VecF32 Z[3];
 Z[0] = xformedvPos[0].Z;
@@ -162,56 +162,49 @@ When I was originally performing the experiments that led to this series, I disc
 
 So, where do these triangles with empty bounding boxes come from? The actual per\-triangle assignments
 
-```
+```cpp
 int startXx = startX.lane[lane];
 int endXx   = endX.lane[lane];
 ```
 
 just get their values from these vectors:
 
-```
+```cpp
 // Use bounding box traversal strategy to determine which
 // pixels to rasterize 
 VecS32 startX = vmax(
-    vmin(
-        vmin(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X),
-        xFormedFxPtPos[2].X), VecS32(tileStartX))
-    & VecS32(~1);
+    vmin(vmin(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X), xFormedFxPtPos[2].X),
+    VecS32(tileStartX)) & VecS32(~1);
 VecS32 endX = vmin(
-    vmax(
-        vmax(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X),
-        xFormedFxPtPos[2].X) + VecS32(1), VecS32(tileEndX));
+    vmax(vmax(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X), xFormedFxPtPos[2].X) + VecS32(1),
+    VecS32(tileEndX));
 ```
 
-Horrible line\-breaking aside \(I just need to switch to a wider layout\), this is fairly straightforward: `startX` is determined as the minimum of all vertex X coordinates, then clipped against the left tile boundary and finally rounded down to be a multiple of 2 \(to align with the 2x2 tiling grid\). Similarly, `endX` is the maximum of vertex X coordinates, clipped against the right boundary of the tile. Since we use an inclusive fill convention but exclusive loop bounds on the right side \(the test is for `< endXx` not `<= endXx`\), there's an extra \+1 in there.
+This looks complicated, but is fairly straightforward: `startX` is determined as the minimum of all vertex X coordinates, then clipped against the left tile boundary and finally rounded down to be a multiple of 2 \(to align with the 2x2 tiling grid\). Similarly, `endX` is the maximum of vertex X coordinates, clipped against the right boundary of the tile. Since we use an inclusive fill convention but exclusive loop bounds on the right side \(the test is for `< endXx` not `<= endXx`\), there's an extra \+1 in there.
 
 Other than the clip to the tile bounds, this really just computes an axis\-aligned bounding rectangle for the triangle and then potentially makes it a little bigger. So really, the only way to get `endXx < startXx` from this is for the triangle to have an empty intersection with the active tile's bounding box. But if that's the case, why was the triangle added to the bin for this tile to begin with? Time to look at the binner code.
 
 The relevant piece of code is [here](https://github.com/rygorous/intel_occlusion_cull/blob/2d1282e5/SoftwareOcclusionCulling/TransformedMeshSSE.cpp#L127). The bounding box determination for the whole triangle looks as follows:
 
-```
+```cpp
 VecS32 vStartX = vmax(
-    vmin(
-        vmin(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X), 
-        xFormedFxPtPos[2].X), VecS32(0));
+    vmin(vmin(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X), xFormedFxPtPos[2].X),
+    VecS32(0));
 VecS32 vEndX   = vmin(
-    vmax(
-        vmax(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X),
-        xFormedFxPtPos[2].X) + VecS32(1), VecS32(SCREENW));
+    vmax(vmax(xFormedFxPtPos[0].X, xFormedFxPtPos[1].X), xFormedFxPtPos[2].X) + VecS32(1),
+    VecS32(SCREENW));
 ```
 
 Okay, that's basically the same we saw before, only we're clipping against the screen bounds not the tile bounds. And the same happens with Y. Nothing to see here so far, move along. But then, what does the code do with these bounds? Let's have a look:
 
-```
+```cpp
 // Convert bounding box in terms of pixels to bounding box
 // in terms of tiles
 int startX = max(vStartX.lane[i]/TILE_WIDTH_IN_PIXELS, 0);
-int endX   = min(vEndX.lane[i]/TILE_WIDTH_IN_PIXELS,
-                 SCREENW_IN_TILES-1);
+int endX   = min(vEndX.lane[i]/TILE_WIDTH_IN_PIXELS, SCREENW_IN_TILES-1);
 
 int startY = max(vStartY.lane[i]/TILE_HEIGHT_IN_PIXELS, 0);
-int endY   = min(vEndY.lane[i]/TILE_HEIGHT_IN_PIXELS,
-                 SCREENH_IN_TILES-1);
+int endY   = min(vEndY.lane[i]/TILE_HEIGHT_IN_PIXELS, SCREENH_IN_TILES-1);
 
 // Add triangle to the tiles or bins that the bounding box covers
 int row, col;
@@ -232,9 +225,8 @@ Okay, I'll spill. The problem is triangles that are completely outside the top o
 
 There's two ways to fix this problem. The first is to use "floor division", i.e. division that always rounds down, no matter the sign. This will again generate an empty rectangle in this case, and everything works fine. However, C/C\+\+ don't have a floor division operator, so this is somewhat awkward to express in code, and I went for the simpler option: just check whether the bounding rectangle is empty before we even do the divide.
 
-```
-if(vEndX.lane[i] < vStartX.lane[i] ||
-   vEndY.lane[i] < vStartY.lane[i]) continue;
+```cpp
+if(vEndX.lane[i] < vStartX.lane[i] || vEndY.lane[i] < vStartY.lane[i]) continue;
 ```
 
 And there's another problem with the code as\-is: There's an off\-by\-one error. Suppose we have a triangle with `maxX=99`. Then we'll compute `vEndX` as 100 and end up inserting the triangle into the bin for x=100 to x=199, which again it doesn't overlap. The solution is simple: stop adding 1 to `vEndX` and clamp it to `SCREENW - 1` instead of `SCREENW`! And with these two issues fixed, we now have a binner that really only bins triangles into tiles intersected by their bounding boxes. Which, in a nice turn of events, also means that our depth rasterizer sees slightly fewer triangles! Does it help?
@@ -367,19 +359,19 @@ There's a few more minor modifications in the most recent set of changes that I 
 
 That said, the change itself is really easy to make now: only do our current computation
 
-```
+```cpp
 VecF32 depth = zz[0] + itof(beta) * zz[1] + itof(gama) * zz[2];
 ```
 
 once per line, and update `depth` incrementally per pixel \(note that doing this properly requires changing the code a little bit, because the original code overwrites `depth` with the value we store to the depth buffer, but that's easily changed\):
 
-```
+```cpp
 depth += zx;
 ```
 
 just like the edge equations themselves, where `zx` can be computed at setup time as
 
-```
+```cpp
 VecF32 zx = itof(aa1Inc) * zz[1] + itof(aa2Inc) * zz[2];
 ```
 

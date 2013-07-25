@@ -76,7 +76,7 @@ There are at least two noteworthy things clearly visible in this screenshot:
 
 The former shouldn't come as a surprise, since it's explicit in the code:
 
-```
+```cpp
 gTaskMgr.CreateTaskSet(&DepthBufferRasterizerSSEMT::TransformMeshes, this,
     NUM_XFORMVERTS_TASKS, NULL, 0, "Xform Vertices", &mXformMesh);
 gTaskMgr.CreateTaskSet(&DepthBufferRasterizerSSEMT::BinTransformedMeshes, this,
@@ -90,7 +90,7 @@ gTaskMgr.WaitForSet(mRasterize);
 
 What the screenshot does show us, however, is the cost of those synchronization points. There sure is a lot of "air" in that diagram, and we could get some significant gains from squeezing it out. The second point is more of a surprise though, because the code does in fact try pretty hard to make sure the tasks are evenly sized. There's a problem, though:
 
-```
+```cpp
 void TransformedModelSSE::TransformMeshes(...)
 {
     if(mVisible)
@@ -123,7 +123,7 @@ Once `TransformMeshes` and `BinTransformedTrianglesMT` use the exact same condit
 
 This is easy to do: `DepthBufferRasterizerSSE` gets a few more member variables
 
-```
+```cpp
 UINT *mpModelIndexA; // 'active' models = visible and not too small
 UINT mNumModelsA;
 UINT mNumVerticesA;
@@ -132,7 +132,7 @@ UINT mNumTrianglesA;
 
 and two new member functions
 
-```
+```cpp
 inline void ResetActive()
 {
     mNumModelsA = mNumVerticesA = mNumTrianglesA = 0;
@@ -153,7 +153,7 @@ that handle the accounting. The depth buffer rasterizer already kept cumulative 
 
 Then, at the end of the `IsVisible` pass \(after the worker threads are done\), I run
 
-```
+```cpp
 // Determine which models are active
 ResetActive();
 for (UINT i=0; i < mNumModels1; i++)
@@ -165,13 +165,13 @@ where `IsRasterized2DB()` is just a predicate that returns `mIsVisible && !mTooS
 
 After that, all that remains is distributing work over the active models only, using `mNumVerticesA` and `mNumTrianglesA`. This is as simple as turning the original loop in `TransformMeshes`
 
-```
+```cpp
 for(UINT ss = 0; ss < mNumModels1; ss++)
 ```
 
 into
 
-```
+```cpp
 for(UINT active = 0; active < mNumModelsA; active++)
 {
     UINT ss = mpModelIndexA[active];
@@ -214,7 +214,7 @@ The green thread picks up a tile with lots of triangles to render pretty late, a
 However, lucky for us, there's a solution: the TBB task manager will parcel out tasks roughly in the order they were submitted. So all we have to do is to make sure the "big" tiles come first. Well, after binning is done, we know exactly how many triangles end up in each tile. So what we do is insert a single task between 
 <br>binning and rasterization that determines the right order to process the tiles in, then make the actual rasterization depend on it:
 
-```
+```cpp
 gTaskMgr.CreateTaskSet(&DepthBufferRasterizerSSEMT::BinSort, this,
     1, &mBinMesh, 1, "BinSort", &sortBins);
 gTaskMgr.CreateTaskSet(&DepthBufferRasterizerSSEMT::RasterizeBinnedTrianglesToDepthBuffer,
@@ -223,7 +223,7 @@ gTaskMgr.CreateTaskSet(&DepthBufferRasterizerSSEMT::RasterizeBinnedTrianglesToDe
 
 So how does that function look? Well, all we have to do is count how many triangles ended up in each triangle, and then sort the tiles by that. The function is so short I'm just gonna show you the whole thing:
 
-```
+```cpp
 void DepthBufferRasterizerSSEMT::BinSort(VOID* taskData,
     INT context, UINT taskId, UINT taskCount)
 {
@@ -256,7 +256,7 @@ void DepthBufferRasterizerSSEMT::BinSort(VOID* taskData,
 
 where `mTileSequence` is just an array of `UINT`s with `NUM_TILES` elements. Then we just rename the `taskId` parameter of `RasterizeBinnedTrianglesToDepthBuffer` to `rawTaskId` and start the function like this:
 
-```
+```cpp
     UINT taskId = mTileSequence[rawTaskId];
 ```
 

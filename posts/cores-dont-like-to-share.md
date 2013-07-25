@@ -44,7 +44,7 @@ But first, some context. `IsVisible` is called in parallel on multiple threads \
 
 Here's the declaration of the `CPUTFrustum` class \(several methods omitted for brevity\):
 
-```
+```cpp
 class CPUTFrustum
 {
 public:
@@ -56,20 +56,15 @@ public:
 
     void InitializeFrustum( CPUTCamera *pCamera );
 
-    bool IsVisible(
-        const float3 &center,
-        const float3 &half
-    );
+    bool IsVisible( const float3 &center, const float3 &half );
 };
 ```
 
 And here's the full code for `IsVisible`, with some minor formatting changes to make it fit inside the layout \(excerpting it would spoil the reveal\):
 
-```
-bool CPUTFrustum::IsVisible(
-    const float3 &center,
-    const float3 &half
-){
+```cpp
+bool CPUTFrustum::IsVisible( const float3 &center, const float3 &half )
+{
     // TODO:  There are MUCH more efficient ways to do this.
     float3 pBBoxPosition[8];
     pBBoxPosition[0] = center + float3(  half.x,  half.y,  half.z );
@@ -81,8 +76,7 @@ bool CPUTFrustum::IsVisible(
     pBBoxPosition[6] = center + float3( -half.x, -half.y,  half.z );
     pBBoxPosition[7] = center + float3( -half.x, -half.y, -half.z );
 
-    // Test each bounding box point against each of the six frustum
-    // planes.
+    // Test each bounding box point against each of the six frustum planes.
     // Note: we need a point on the plane to compute the distance
     // to the plane. We only need two of our frustum's points to do
     // this. A corner vertex is on three of the six planes.  We
@@ -104,8 +98,7 @@ bool CPUTFrustum::IsVisible(
             if( distanceToPlane < 0.0f )
             {
                 allEightPointsOutsidePlane = false;
-                break; // from for.  No point testing any
-                // more points against this plane.
+                break; // from for.  No point testing any more points against this plane.
             }
         }
         if( allEightPointsOutsidePlane )
@@ -150,14 +143,13 @@ All is not well however, because the method `AABBoxRasterizerSSEMT::IsInsideView
 
 Again, I'm not going to dig into it here now deeply, but it turns out that the this is the function that calls `IsVisible`. No, it's not what you might be thinking \- `IsVisible` didn't get inlined or anything like that. In fact, its code looks exactly like it did before. And more to the point, the problem actually isn't in `AABBoxRasterizerSSEMT::IsInsideViewFrustum`, it's inside the function `TransformedAABBoxSSE::IsInsideViewFrustum`, which it calls, and which does get inlined into `AABBoxRasterizerSSEMT::IsInsideViewFrustum`:
 
-```
+```cpp
 void TransformedAABBoxSSE::IsInsideViewFrustum(CPUTCamera *pCamera)
 {
     float3 mBBCenterWS;
     float3 mBBHalfWS;
     mpCPUTModel->GetBoundsWorldSpace(&mBBCenterWS, &mBBHalfWS);
-    mInsideViewFrustum = pCamera->mFrustum.IsVisible(mBBCenterWS,
-        mBBHalfWS);
+    mInsideViewFrustum = pCamera->mFrustum.IsVisible(mBBCenterWS, mBBHalfWS);
 }
 ```
 

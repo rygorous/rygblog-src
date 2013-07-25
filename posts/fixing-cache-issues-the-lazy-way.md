@@ -20,14 +20,13 @@ And with all that out of the way, let's look at cache effects.
 
 and explaining that the actual issue is triggered by this \(inlined\) function:
 
-```
+```cpp
 void TransformedAABBoxSSE::IsInsideViewFrustum(CPUTCamera *pCamera)
 {
     float3 mBBCenterWS;
     float3 mBBHalfWS;
     mpCPUTModel->GetBoundsWorldSpace(&mBBCenterWS, &mBBHalfWS);
-    mInsideViewFrustum = pCamera->mFrustum.IsVisible(mBBCenterWS,
-        mBBHalfWS);
+    mInsideViewFrustum = pCamera->mFrustum.IsVisible(mBBCenterWS, mBBHalfWS);
 }
 ```
 
@@ -45,7 +44,7 @@ At this point, you might decide to rewrite the whole thing to have more coherent
 
 Of course there is, or I wouldn't be asking. The key realization is that the outer loop in `AABBoxRasterizerSSEMT::IsInsideViewFrustum` actually traverses an array of bounding boxes \(type `TransformedAABBoxSSE`\) in order:
 
-```
+```cpp
 for(UINT i = start; i < end; i++)
 {
     mpTransformedAABBox[i].IsInsideViewFrustum(mpCamera);
@@ -54,14 +53,13 @@ for(UINT i = start; i < end; i++)
 
 One linear traversal is all we need. We know that the hardware prefetcher is going to load that ahead for us \- and by now, they're smart enough to do that properly even if our accesses are strided, that is, we don't read all the data between the start and the end of the array, but only some of them with a regular spacing. This means that if we can get those world\-space bounding boxes into `TransformedAABBoxSSE`, they'll automatically get prefetched for us. And it turns out that in this example, all models are at a fixed position \- we can determine the world\-space bounding boxes once, at load time. Let's look at our function again:
 
-```
+```cpp
 void TransformedAABBoxSSE::IsInsideViewFrustum(CPUTCamera *pCamera)
 {
     float3 mBBCenterWS;
     float3 mBBHalfWS;
     mpCPUTModel->GetBoundsWorldSpace(&mBBCenterWS, &mBBHalfWS);
-    mInsideViewFrustum = pCamera->mFrustum.IsVisible(mBBCenterWS,
-        mBBHalfWS);
+    mInsideViewFrustum = pCamera->mFrustum.IsVisible(mBBCenterWS, mBBHalfWS);
 }
 ```
 
@@ -77,7 +75,7 @@ It's still not great \(I've included the Clocks Per Instruction Rate again so we
 
 Okay, our quick fix got the HW prefetchers to work for us, and clearly that gave us a considerable improvement. But we still only need 24 bytes out of every `TransfomedAABBoxSSE`. How big are they? Let's have a look at the data members \(methods elided\):
 
-```
+```cpp
 class TransformedAABBoxSSE
 {
     // Methods elided
@@ -103,7 +101,7 @@ class TransformedAABBoxSSE
 
 In a 32\-bit environment, that gives us 226 bytes of payload per BBox \(the actual size is a bit more, due to alignment padding\). Of these 226 bytes, for the frustum culling, we actually read 24 bytes \(`mBBCenterWS` and `mBBHalfWS`\) and write one \(`mInsideViewFrustum`\). That's a pretty bad ratio, and there's a lot of memory wasting going on, but for the purposes of caching, we only pay for what we actually read, and that's not much. That said, even though we don't access it here, the biggest chunk of data in the whole thing is `mBBIndexList` at 144 bytes, which is just a list of triangle indices for this BBox. That's completely unnecessary, since that list is going to be the same for every single BBox in the system. So let's fix that one and reorder some of the other fields so that the members we're going to access during frustum culling are close by each other \(and hence more likely to hit the same cache line\):
 
-```
+```cpp
 class TransformedAABBoxSSE
 {
     // Methods elided

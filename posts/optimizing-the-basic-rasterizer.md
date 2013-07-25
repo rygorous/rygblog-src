@@ -18,28 +18,30 @@ Right, however, now we still perform two multiplies and five subtractions per ed
 
 If you go back to ["The barycentric conspiracy"](*the-barycentric-conspirac), you'll notice that we already derived an alternative formulation of the edge functions by rearranging and simplifying the determinant expression:
 
-$$F_{01}(p) = (v_{0y} - v_{1y}) p_x + (v_{1x} - v_{0x}) p_y + (v_{0x} v_{1y} - v_{0y} v_{1x})$$
+$$[F_{01}(p) = (v_{0y} - v_{1y}) p_x + (v_{1x} - v_{0x}) p_y + (v_{0x} v_{1y} - v_{0y} v_{1x})$$]
 
 Now, to reduce the amount of noise, let's give those terms in parentheses names:
 
-$$A_{01} := v_{0y} - v_{1y}$$
-<br>$$B_{01} := v_{1x} - v_{0x}$$
-<br>$$C_{01} := v_{0x} v_{1y} - v_{0y} v_{1x}$$
+$$[\begin{align}
+A_{01} & := v_{0y} - v_{1y} \\
+B_{01} & := v_{1x} - v_{0x} \\
+C_{01} & := v_{0x} v_{1y} - v_{0y} v_{1x}
+\end{align}$$]
 
 And if we split p into its x and y components, we get:
 
-$$F_{01}(p_x, p_y) = A_{01} p_x + B_{01} p_y + C_{01}$$
+$$[F_{01}(p_x, p_y) = A_{01} p_x + B_{01} p_y + C_{01}$$]
 
 Now, in every iteration of our inner loop, we move one pixel to the right, and for every scan line, we move one pixel up or down \(depending on which way your y axis points \- note I haven't bothered to specify that yet!\) from the start of the previous scan line. Both of these updates are really easy to perform since F<sub>01</sub> is an affine function and we're stepping along the coordinate axes:
 
-$$F_{01}(p_x + 1, p_y) - F_{01}(p_x, p_y) = A_{01}$$
-<br>$$F_{01}(p_x, p_y + 1) - F_{01}(p_x, p_y) = B_{01}$$
+$$[F_{01}(p_x + 1, p_y) - F_{01}(p_x, p_y) = A_{01} \\
+F_{01}(p_x, p_y + 1) - F_{01}(p_x, p_y) = B_{01}$$]
 
 In words, if you go one step to the right, add A<sub>01</sub> to the edge equation. If you step down/up \(whichever direction \+y is in your coordinate system\), add B<sub>01</sub>. That's it. That's *all* there is to it.
 
 In our basic triangle rasterization loop, this turns into something like this: \(I'll keep using the original `orient2d` for the initial setup so we can see the similarity\):
 
-```
+```cpp
     // Bounding box and clipping as before
     // ...
 
@@ -85,7 +87,7 @@ In fact, after triangle setup, it's really mostly adds and sign tests no matter 
 
 And on the subject of signs, there's a small trick in software implementations to simplify the sign\-testing part: as I just said, all we really need is the sign bit. If it's clear, we know the value is positive or zero, and if it's set, we know the value is negative. In fact, this is why I made the initial rasterizer test for `>= 0` in the first place \- you really want to use a test that only depends on the sign bit, and not something slightly more complicated like `> 0`. Why do we care? Because it allows us to rewrite the three sign tests like this:
 
-```
+```cpp
     // If p is on or inside all edges, render pixel.
     if ((w0 | w1 | w2) >= 0)
         renderPixel(p, w0, w1, w2);     
@@ -99,7 +101,7 @@ However, as fun as squeezing individual integer instructions is, the main reason
 
 For starters, let's assume we want to process 4x1 pixels at a time \- that is, in groups 4 pixels wide, but only one pixel high. But before we do anything else, let me just pull all the per\-edge setup into a single function:
 
-```
+```cpp
 struct Edge {
     // Dimensions of our pixel group
     static const int stepXSize = 4;
@@ -108,12 +110,10 @@ struct Edge {
     Vec4i oneStepX;
     Vec4i oneStepY;
 
-    Vec4i init(const Point2D& v0, const Point2D& v1,
-               const Point2D& origin);
+    Vec4i init(const Point2D& v0, const Point2D& v1, const Point2D& origin);
 };
 
-Vec4i Edge::init(const Point2D& v0, const Point2D& v1,
-                 const Point2D& origin)
+Vec4i Edge::init(const Point2D& v0, const Point2D& v1, const Point2D& origin)
 {
     // Edge setup
     int A = v0.y - v1.y, B = v1.x - v0.x;
@@ -136,7 +136,7 @@ As said, this is the setup for one edge, but it already includes all the "magic"
 
 With this factored out, the SIMD version for the rest of the rasterizer is easy enough:
 
-```
+```cpp
     // Bounding box and clipping again as before
 
     // Triangle setup

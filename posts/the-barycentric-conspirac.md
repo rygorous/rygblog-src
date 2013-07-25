@@ -40,7 +40,7 @@ And so we have the picture to go with my "intersection of 3 half\-spaces" commen
 
 If we have the coordinates of all involved points, the answer turns out to be: determinants. And not just any old determinant will do; given the three points a, b and c, we want to compute the determinant
 
-$$\mathrm{Orient2D}(a,b,c) = \begin{vmatrix} a_x & b_x & c_x \\ a_y & b_y & c_y \\ 1 & 1 & 1 \end{vmatrix} = \begin{vmatrix} b_x - a_x & c_x - a_x \\ b_y - a_y & c_y - a_y \end{vmatrix}$$
+$$[\mathrm{Orient2D}(a,b,c) = \begin{vmatrix} a_x & b_x & c_x \\ a_y & b_y & c_y \\ 1 & 1 & 1 \end{vmatrix} = \begin{vmatrix} b_x - a_x & c_x - a_x \\ b_y - a_y & c_y - a_y \end{vmatrix}$$]
 
 Clearly, if this expression is positive, c lies to the left of the directed edge ab \(i.e. the triangle abc is wound counter\-clockwise\), and with that out of the way, we can start rasterizing triangles...
 
@@ -52,13 +52,13 @@ So let's look at this beast a bit more closely. First, notice how the first expr
 
 Next, note that we can transform the first form \(the 3x3 determinant\) into the second form by subtracting the first column from the other two and then developing the determinant with respect to the third row, which should hopefully make it a bit less mysterious. There's also a very nice way to understand this geometrically, but I'm not going to explain that here \- maybe another time. Anyway, now that we know how to derive the 2x2 form, let's look at it in turn. With arbitrary 2D vectors p and q, the determinant
 
-$$\begin{vmatrix} p_x & q_x \\ p_y & q_y \end{vmatrix}$$
+$$[\begin{vmatrix} p_x & q_x \\ p_y & q_y \end{vmatrix}$$]
 
 gives the \(signed\) area of the parallelogram spanned by the edge vectors p and q \(I'm assuming you know this one \- it's a standard linear algebra fact, and proving it is outside the scope of this article\). Similarly, a 3x3 determinant of vectors p, q, r gives the signed volume of the parallelepiped spanned by those three vectors, and in higher dimensions, a n×n determinant of n vectors gives the signed n\-volume of the corresponding n\-parallelotope, but I digress.
 
 So, with that in mind, let's first look at our triangle and try to compute Orient2D\(v<sub>0</sub>, v<sub>1</sub>, v<sub>2</sub>\). That should help us find out whether it's wound counter\-clockwise \(i.e. whether v<sub>2</sub> is to the left of the oriented edge v<sub>0</sub>v<sub>1</sub>\) or not. The expression above tells us to compute the determinant
 
-$$\begin{vmatrix} v_{1x} - v_{0x} & v_{2x} - v_{0x} \\ v_{1y} - v_{0y} & v_{2y} - v_{0y} \end{vmatrix}$$
+$$[\begin{vmatrix} v_{1x} - v_{0x} & v_{2x} - v_{0x} \\ v_{1y} - v_{0y} & v_{2y} - v_{0y} \end{vmatrix}$$]
 
 which should give us the signed area of the parallelogram with edges v<sub>0</sub>v<sub>1</sub> and v<sub>0</sub>v<sub>2</sub>. Let's draw that on top of our triangle so we can see what's going on:
 
@@ -68,11 +68,11 @@ Now, there's two things about this worth mentioning: First, if we were to swap v
 
 The second thing is that the parallelogram we're looking at clearly has twice the area of the triangle we started with. This is no accident \- constructing the fourth vertex of the parallelogram produces another triangle that is congruent to the first one, so the two triangles have the same area, hence the parallelogram has twice the area of the triangle we started out with. This gives us the standard determinant formula for the area of the triangle:
 
-$$\mathrm{TriArea}(v_0,v_1,v_2) = \frac{1}{2} \begin{Vmatrix} v_{1x} - v_{0x} & v_{2x} - v_{0x} \\ v_{1y} - v_{0y} & v_{2y} - v_{0y} \end{Vmatrix}$$
+$$[\mathrm{TriArea}(v_0,v_1,v_2) = \frac{1}{2} \begin{Vmatrix} v_{1x} - v_{0x} & v_{2x} - v_{0x} \\ v_{1y} - v_{0y} & v_{2y} - v_{0y} \end{Vmatrix}$$]
 
 The other standard formula for triangle area is $$\frac{1}{2} b h$$, where b is the length of the base of the triangle \(=length of one of its edges\) and h is the corresponding height \(=length of the perpendicular of b through the vertex opposite b\). In fact, the proof for this formula uses the same parallelogram we just saw. Compare the two expressions and we note that our signed area computation can be written
 
-$$\triangle(v_0,v_1,v_2) := \frac{1}{2} \begin{vmatrix} v_{1x} - v_{0x} & v_{2x} - v_{0x} \\ v_{1y} - v_{0y} & v_{2y} - v_{0y} \end{vmatrix} = \frac{1}{2} \|v_1 - v_0\| \, h(v_2,v_0v_1)$$
+$$[\triangle(v_0,v_1,v_2) := \frac{1}{2} \begin{vmatrix} v_{1x} - v_{0x} & v_{2x} - v_{0x} \\ v_{1y} - v_{0y} & v_{2y} - v_{0y} \end{vmatrix} = \frac{1}{2} \|v_1 - v_0\| \, h(v_2,v_0v_1)$$]
 
 where h\(v<sub>2</sub>, v<sub>0</sub>v<sub>1</sub>\) denotes the *signed* height of v<sub>2</sub> over v<sub>0</sub>v<sub>1</sub> \- this isn't standard notation, but bear with me for a minute. The point here is that the value of this signed area computation is proportional to the signed distance of v<sub>2</sub> from the edge. That this works on triangles should not be surprising \- the same is true for rectangles, for example \- but it's worth spelling out explicitly here because we'll be doing a lot of signed area computations to determine what is in effect signed distances. So it's important to know that they're equivalent.
 
@@ -80,16 +80,16 @@ where h\(v<sub>2</sub>, v<sub>0</sub>v<sub>1</sub>\) denotes the *signed* height
 
 Now, let's get back to our original use for these determinant expressions: figuring out on which side of an edge a point lies. So let's pick an arbitrary point p and see how it relates to the edge v<sub>0</sub>v<sub>1</sub>. Throwing it into our determinant expression:
 
-$$\begin{vmatrix} v_{1x} - v_{0x} & p_x - v_{0x} \\ v_{1y} - v_{0y} & p_y - v_{0y} \end{vmatrix} = (v_{1x} - v_{0x}) (p_y - v_{0y}) - (v_{1y} - v_{0y}) (p_x - v_{0x})$$
+$$[\begin{vmatrix} v_{1x} - v_{0x} & p_x - v_{0x} \\ v_{1y} - v_{0y} & p_y - v_{0y} \end{vmatrix} = (v_{1x} - v_{0x}) (p_y - v_{0y}) - (v_{1y} - v_{0y}) (p_x - v_{0x})$$]
 
 and if we rearrange terms a bit, regroup and simplify we get
 
-$$F_{01}(p) := (v_{0y} - v_{1y}) p_x + (v_{1x} - v_{0x}) p_y + (v_{0x} v_{1y} - v_{0y} v_{1x})$$
+$$[F_{01}(p) := (v_{0y} - v_{1y}) p_x + (v_{1x} - v_{0x}) p_y + (v_{0x} v_{1y} - v_{0y} v_{1x})$$]
 
 This is what I'll call the *edge function* for edge v<sub>0</sub>v<sub>1</sub>. As you can see, if we hold the vertex positions constant, this is just an affine function on p. Doing the same with the other two edges gives us two more edge functions:
 
-$$F_{12}(p) := (v_{1y} - v_{2y}) p_x + (v_{2x} - v_{1x}) p_y + (v_{1x} v_{2y} - v_{1y} v_{2x})$$
-<br>$$F_{20}(p) := (v_{2y} - v_{0y}) p_x + (v_{0x} - v_{2x}) p_y + (v_{2x} v_{0y} - v_{2y} v_{0x})$$
+$$[F_{12}(p) := (v_{1y} - v_{2y}) p_x + (v_{2x} - v_{1x}) p_y + (v_{1x} v_{2y} - v_{1y} v_{2x}) \\
+F_{20}(p) := (v_{2y} - v_{0y}) p_x + (v_{0x} - v_{2x}) p_y + (v_{2x} v_{0y} - v_{2y} v_{0x})$$]
 
 If all three of these are positive, p is inside the triangle, assuming the triangle is wound counter\-clockwise, which I will for the rest of this article. If it's clockwise, just swap two of the vertices before you start hit\-testing. Now, these are normal linear functions, but from their derivation and the determinant properties we saw earlier, we know that they in fact also measure the signed area of the corresponding parallelogram \- which in turn is twice the signed area of the corresponding triangle. Let's pick a point inside the triangle and draw the corresponding diagram:
 
@@ -97,7 +97,7 @@ If all three of these are positive, p is inside the triangle, assuming the trian
 
 But wait, there's more! Since the three triangles add up to the area of the original triangle, the three corresponding edge functions should add up to twice the signed area of the full triangle v<sub>0</sub>v<sub>1</sub>v<sub>2</sub> \(twice because triangle area has the 1/2 factor whereas our edge functions don't\). Or, as a formula:
 
-$$F_{01}(p) + F_{12}(p) + F_{20}(p) = 2 \triangle(v_0, v_1, v_2) = \mathrm{const.}$$
+$$[F_{01}(p) + F_{12}(p) + F_{20}(p) = 2 \triangle(v_0, v_1, v_2) = \mathrm{const.}$$]
 
 If you look at the terms in the edge functions containing p<sub>x</sub> and p<sub>y</sub> that shouldn't be surprising: Summing the three terms for p<sub>x</sub> gives \(v<sub>0y</sub> \- v<sub>1y</sub> \+ v<sub>1y</sub> \- v<sub>2y</sub> \+ v<sub>2y</sub> \- v<sub>0y</sub>\) = 0, and similar for p<sub>y</sub>. So yes, the sum of these three is constant alright. Now, looking at this in linear algebra terms, this shouldn't come as a surprise: we have 3 affine functions on only 2 variables \- they're not going to be independent. But it still helps to see the underlying geometry.
 
@@ -111,29 +111,29 @@ Note that the statement about the edge functions summing up to the area of the t
 
 Now, this blog post is called "the barycentric conspiracy", but strangely, this far in, we don't seem to have seen a single barycentric coordinate yet. What's up with that? Well, let's first look at what barycentric coordinates are: in the context of a triangle, the *barycentric coordinates* of a point are a triple \(w<sub>0</sub>, w<sub>1</sub>, w<sub>2</sub>\) of numbers that act as "weights" for the corresponding vertices. So the three coordinate triples \(1,0,0\), \(0,1,0\) and \(0,0,1\) correspond to v<sub>0</sub>, v<sub>1</sub> and v<sub>2</sub>, respectively. More generally, we allow the weights to be anything \(except all zeros\) and just divide through by their sum in the end. Then the barycentric coordinates for p are a triple \(w<sub>0</sub>, w<sub>1</sub>, w<sub>2</sub>\) such that:
 
-$$\displaystyle p = \frac{w_0 v_0 + w_1 v_1 + w_2 v_2}{w_0 + w_1 + w_2}$$
+$$[p = \frac{w_0 v_0 + w_1 v_1 + w_2 v_2}{w_0 + w_1 + w_2}$$]
 
 Since we divide through by their sum, they're only unique up to scale \- much like the homogeneous coordinates you're hopefully familiar with as a graphics programmer. This is the second time we've accidentally bumped into them in this post. *That is not an accident*. Barycentric coordinates *are* a type of homogeneous coordinates, and in fact both were introduced in the same paper by Möbius in 1827. I'm trying to stick with plain planar geometry in this post since it's easier to draw \(and also easier to follow if you're not used to thinking in projective geometry\). That means the whole homogeneous coordinate angle is fairly subdued in this post, but trust me when I say that everything we've been doing in here works just as well in projective spaces. And you've already seen the geometric derivations for everything, so we can even do it completely coordinate\-free if we wanted to \(always good to know how to avoid the algebra if you're not feeling like it\).
 
 But back to barycentric coordinates: We already know that our edge functions measure \(signed\) areas, and that they're zero on their respective edges. Well, both v<sub>0</sub> and v<sub>1</sub> are on the edge v<sub>0</sub>v<sub>1</sub> \(obviously\), and hence 
 
-$$F_{01}(v_0) = F_{01}(v_1) = 0$$.
+$$[F_{01}(v_0) = F_{01}(v_1) = 0.$$]
 
 And we also already know that if we plug the third vertex into the edge function, we get twice the signed area of the whole triangle:
 
-$$F_{01}(v_2) = 2 \triangle(v_0,v_1,v_2)$$.
+$$[F_{01}(v_2) = 2 \triangle(v_0,v_1,v_2).$$]
 
 The same trick works with the other two edge functions: whenever all three vertices are involved, we get twice the signed area of the whole triangle, otherwise the result is zero. And we already know they're affine functions. At this point, things should already look fairly suspicious, so I'm just gonna cut to the chase: Let's set
 
-$$w_0(p) := F_{12}(p)$$
-<br>$$w_1(p) := F_{20}(p)$$
-<br>$$w_2(p) := F_{01}(p)$$
+$$[w_0(p) := F_{12}(p) \\
+w_1(p) := F_{20}(p) \\
+w_2(p) := F_{01}(p)$$]
 
 That's right, the three edge functions, evaluated at p, give us p's barycentric coordinates, normalized so their sum is twice the area of the triangle. Note that the barycentric weight is always for the vertex *opposite* the edge we're talking about. Now that you've seen the area diagram, it should be clear why: what the edge function F<sub>12</sub>\(p\) gives us is the scaled area of the triangle v<sub>1</sub>v<sub>2</sub>p, and the further p is from edge v<sub>1</sub>v<sub>2</sub>, the larger that triangle is. At the extreme, when p is at v<sub>2</sub>, it covers the entirety of the original triangle we started out with. So that all makes sense. While we're at it, let's also define a normalized version of the barycentric coordinates with their sum always being 1:
 
-$$\lambda_0(p) := F_{12}(p) / 2 \triangle(v_0,v_1,v_2)$$
-<br>$$\lambda_1(p) := F_{20}(p) / 2 \triangle(v_0,v_1,v_2)$$
-<br>$$\lambda_2(p) := F_{01}(p) / 2 \triangle(v_0,v_1,v_2)$$
+$$[\lambda_0(p) := F_{12}(p) / 2 \triangle(v_0,v_1,v_2) \\
+\lambda_1(p) := F_{20}(p) / 2 \triangle(v_0,v_1,v_2) \\
+\lambda_2(p) := F_{01}(p) / 2 \triangle(v_0,v_1,v_2)$$]
 
 So the secret is out \- the determinants we've been looking at, the signed areas and distances, even the edge functions \- it was barycentric coordinates all along. **It's all connected, and everybody's in on it!** Cue scare chord.
 
@@ -143,14 +143,14 @@ And with that, we have all the math we need, but there's one more application th
 
 Now, for the depth buffer rasterizer that we're going to look at, we only need to interpolate one thing, and that's depth. If we have z values z<sub>0</sub>, z<sub>1</sub>, z<sub>2</sub> at the vertices, we can determine the interpolated depth by computing
 
-$$z(p) := \lambda_0(p) z_0 + \lambda_1(p) z_1 + \lambda_2(p) z_2$$
+$$[z(p) := \lambda_0(p) z_0 + \lambda_1(p) z_1 + \lambda_2(p) z_2$$]
 
 and if we have the edge function values for p already, that's fairly straightforward and works just fine, at the cost of three multiplies and two adds. But remember that we have the whole thing normalized so the lambdas sum to 1. This means we can express any lambda in terms of the two others:
 
-$$\lambda_0 + \lambda_1 + \lambda_2 = 1 \quad \Leftrightarrow \quad \lambda_0 = 1 - \lambda_1 - \lambda_2$$
+$$[\lambda_0 + \lambda_1 + \lambda_2 = 1 \quad \Leftrightarrow \quad \lambda_0 = 1 - \lambda_1 - \lambda_2$$]
 
 Plugging this into the above expression and simplifying, we get:
 
-$$z(p) = z_0 + \lambda_1(p) (z_1 - z_0) + \lambda_2(p) (z_2 - z_0)$$
+$$[z(p) = z_0 + \lambda_1(p) (z_1 - z_0) + \lambda_2(p) (z_2 - z_0)$$]
 
 The differences between the z<sub>i</sub>'s are constant across the triangle, so we can compute them once. This gives us an alternative barycentric interpolation expression that uses two multiplies and two adds, in a form that allows them to be executed as two fused multiply\-adds. Now if there's one thing we've seen in the previous posts in this series, it's that counting operations is often the wrong way to approach performance problems, but this one simplification we will end up using in an inner loop that's actually bottlenecked by the number of instructions executed. And, just as importantly, this is also the expression that GPUs normally use for vertex attribute interpolation. I might talk more about that at some point, but there's already more than enough material for one sitting in this post. So see you next time, when we learn how to turn all this into a rasterizer.

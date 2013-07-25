@@ -36,7 +36,7 @@ At this point it was clear that the whole config file thing needed some serious 
 
 Let's cut straight to the chase: Here's the code.
 
-```
+```cpp
 void RemoveWhitespace(cString &szString)
 {
     // Remove leading whitespace
@@ -84,7 +84,7 @@ Among the many things this function does wrong are:
 
 That by itself would be bad enough. But it turns out that in context, not only is this function badly implemented, most of the work it does is completely unnecessary. Here's one of its main callers, `ReadLine`:
 
-```
+```cpp
 CPUTResult ReadLine(cString &szString, FILE *pFile)
 {
     // TODO: 128 chars is a narrow line.  Why the limit?
@@ -120,13 +120,13 @@ But the main thing of note here is that `szString` is assigned from a C\-style \
 
 Except all of this is completely unnecessary. Even if we need the output to be a `cString`, we can just start out with a subset of the C string to begin with, rather than taking the whole thing. All `RemoveWhitespace` really needs to do is tell us where the non\-whitespace part of the string begins and ends. You can either do this using C\-style string handling or, if you want it to "feel more C\+\+", you can express it by iterator manipulation:
 
-```
+```cpp
 static bool iswhite(int ch)
 {
     return ch == _L(' ') || ch == _L('\t') || ch == _L('\n');
 }
 
-template
+template<typename Iter>
 static void RemoveWhitespace(Iter& start, Iter& end)
 {
     while (start < end && iswhite(*start))
@@ -139,7 +139,7 @@ static void RemoveWhitespace(Iter& start, Iter& end)
 
 Note that this is not only much shorter, it also correctly deals with all types of white space both at the beginning and the end of the line. Instead of the original string assignment we then do:
 
-```
+```cpp
     // TCHAR* obeys the iterator interface, so...
     TCHAR* start = szCurrLine;
     TCHAR* end = szCurrLine + tcslen(szCurrLine);
@@ -157,7 +157,7 @@ Not quite. Even with the `RemoveWhitespace` insanity under control, we're still 
 
 Long story short, this code still badly needed to be rewritten to do less string handling, so I did. My new code just reads the file into a memory buffer in one go \(the app in question takes 1.5GB of memory in its original form, we can afford to allocate 650K for a text file in one block\) and then implements a more reasonable scanner that processes the data in place and doesn't do any string operations until we need to store values in their final location. Now, because the new scanner assumes that ASCII characters end up as ASCII, this will actually not work correctly with some character encodings such as Shift\-JIS, where ASCII\-looking characters can appear in the middle of encodings for multibyte characters \(the config file format mirrors INI files, so '\[', '\]' and '=' are special characters, and the square brackets can appear as second characters in a Shift\-JIS sequence\). It does however still work with US\-ASCII text, the ISO Latin family and UTF\-8, which I decided was acceptable for a config file reader. I did still want to support Unicode characters as identifiers though, which meant I was faced with a problem: once I've identified all the tokens and their extents in the file, surely it shouldn't be hard to turn the corresponding byte sequences into the `std::wstring` objects the rest of the code wants using standard C\+\+ facilities? Really, all I need is a function with this signature:
 
-```
+```cpp
 void AssignStr(cString& str, const char* begin, const char* end);
 ```
 
@@ -173,7 +173,7 @@ But let's assume for a second that we're willing to modify the input data \(`con
 
 Well, it depends on how loose you're willing to play with the C\+\+ standard. The goal of the whole operation was to reduce the number of temporary allocations. Well, `mbstowcs` wants a `wchar_t` output buffer, and writes it like it's a C string, including terminating NUL. `std::wstring` also has memory allocated, and normal implementations will store a terminating 0 `wchar_t`, but as far as I can tell, this is not actually guaranteed. In any case, there's a problem, because we need to reserve the right number of wchar's in the output string, but it's not guaranteed to be safe to do this:
 
-```
+```cpp
 void AssignStr(cString& str, const char* begin, const char* end)
 {
     // patch a terminating NUL into *end
@@ -205,7 +205,7 @@ Either way is completely beside the point though. This is an actual, nontrivial 
 
 That's not it quite yet, though. Because when I actually wrote the code \(as opposed to summarizing it for this blog post\), I didn't think to patch in the NUL byte on the source string. So I went for the alternative API that works character by character: the C function `mbtowc`. Now, awesomely, because it works character by character, and is not guaranteed to see all characters in a multi\-byte sequence in the same call, it has to keep state around of which partial multi\-byte sequences it has seen to be able to decode characters. So it's not thread\-safe, and POSIX defines an extended version `mbrtowc` that makes you pass in a pointer to that state which does make it thread\-safe. At this point though, I don't care about thread\-safety \(this code is single\-threaded anyway\), and besides, in our case I actually know that the characters between `begin` and `end` are supposed to parse correctly. So I just don't worry about it. Also, instead of actually counting the right number of `wchar_t`'s ahead of time in a second pass, I just assume that the string is generally likely to have less wide characters than the source multi\-byte string has bytes. Even if that turns out wrong \(which won't happen for conventional encodings\), the `std::wstring` we write to can dynamically resize, so there's not much that can go wrong. So I ended up with this implementation:
 
-```
+```cpp
 void AssignStr(cString& dest, const char* begin, const char* end)
 {
     dest.clear();
@@ -236,7 +236,7 @@ Well, one profiling session later, I noticed that performance had improved, but 
 
 It's probably the VC\+\+ STL doing something stupid. At this point, I don't feel like investigating why this is happening. Whatever, I'm just gonna add some more to this layer cake of insanity. Just stop thinking and start coding. So I figure that hey, if adding stuff to strings is apparently an expensive operation, well, let's amortize it, eh? So I go for this:
 
-```
+```cpp
 void AssignStr(cString& dest, const char* begin, const char* end)
 {
     dest.clear();

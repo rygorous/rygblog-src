@@ -101,7 +101,7 @@ Well, that's easy enough to fix: *don't do that!* Suppose we had two worker thre
 
 Anyway, the same idea generalizes to N threads: instead of partitioning the models into odd and even halves, group all models which have the same index mod N. And in practice we don't want to interleave at the level of individual models, since them being close together also has an advantage: they tend to hit similar regions of the depth buffer, which have a good chance of being in the cache. So instead of interleaving at the level of individual models, we interleave groups of 64 \(arbitrary choice!\) models at a time; an idea similar to the disk striping used for RAIDs. It turns out to be a really easy change to make: just replace the original loop
 
-```
+```cpp
 for(UINT i = start; i < end; i++)
 {
     // process model i
@@ -110,7 +110,7 @@ for(UINT i = start; i < end; i++)
 
 with the only marginally more complicated
 
-```
+```cpp
 static const UINT kChunkSize = 64;
 for(UINT base = taskId*kChunkSize; base < mNumModels;
         base += mNumDepthTestTasks * kChunkSize)

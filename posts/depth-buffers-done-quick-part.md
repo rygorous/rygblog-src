@@ -20,7 +20,6 @@ That was good enough while we were basically just looking for unexpected hot spo
 The sample already times how much time is spent in rendering the depth buffer and in the occlusion culling \(which is another rasterizer that Z\-tests a bounding box against the depth buffer prepared in the first step\). I also log these measurements and print out some summary statistics at the end of the run. For both the rendering time and the occlusion test time, I print out the minimum, 25th percentile, median, 75th percentile and maximum of all observed values, together with the mean and standard deviation. This should give us a good idea of how these values are distributed. Here's a first run:
 
 ```
-
 Render time:
   min=3.400ms  25th=3.442ms  med=3.459ms  75th=3.473ms  max=3.545ms
   mean=3.459ms sdev=0.024ms
@@ -61,7 +60,7 @@ I won't bother with the test time here \(even though the initial version of this
 
 Now, if you followed the links to the code I posted last time, you might've noticed that the code checks the variable `gVisualizeDepthBuffer` multiple times, even in the inner loop. An example is [this passage](https://github.com/rygorous/intel_occlusion_cull/blob/97eae9a8/SoftwareOcclusionCulling/DepthBufferRasterizerSSEMT.cpp#L445) that loads the current depth buffer values at the target location:
 
-```
+```cpp
 __m128 previousDepthValue;
 if(gVisualizeDepthBuffer)
 {
@@ -112,7 +111,7 @@ We get a lower value for the depth tests, but that doesn't necessarily mean much
 
 Let me show you the whole inner loop \(with some cosmetic changes so it fits in the layout, damn those overlong Intel SSE intrinsics\) so you can see what I'm talking about:
 
-```
+```cpp
 for(int c = startXx; c < endXx;
         c += 2,
         idx += 4,
@@ -121,8 +120,7 @@ for(int c = startXx; c < endXx;
         gama  = _mm_add_epi32(gama, aa2Inc))
 {
     // Test Pixel inside triangle
-    __m128i mask = _mm_cmplt_epi32(fxptZero, 
-        _mm_or_si128(_mm_or_si128(alpha, beta), gama));
+    __m128i mask = _mm_cmplt_epi32(fxptZero, _mm_or_si128(_mm_or_si128(alpha, beta), gama));
                                         
     // Early out if all of this quad's pixels are
     // outside the triangle.
@@ -139,11 +137,9 @@ for(int c = startXx; c < endXx;
     __m128 previousDepthValue = *(__m128*)&pDepthBuffer[idx];
 
     __m128 depthMask = _mm_cmpge_ps(depth, previousDepthValue);
-    __m128i finalMask = _mm_and_si128(mask,
-        _mm_castps_si128(depthMask));
+    __m128i finalMask = _mm_and_si128(mask, _mm_castps_si128(depthMask));
 
-    depth = _mm_blendv_ps(previousDepthValue, depth,
-        _mm_castsi128_ps(finalMask));
+    depth = _mm_blendv_ps(previousDepthValue, depth, _mm_castsi128_ps(finalMask));
     _mm_store_ps(&pDepthBuffer[idx], depth);
 }
 ```
@@ -156,21 +152,20 @@ Well, turns out there's one thing: we can get rid of the compare. Remember that 
 
 Turns out: it could. Because our `x` is only ever 0 when all three edge functions are 0 \- that is, the current pixel lies right on all three edges at the same time. And the only way that can ever happen is for the triangle to be degenerate \(zero\-area\). But we never rasterize zero\-area triangles \- they get culled before we ever reach this loop! So the case `x == 0` can never actually happen, which means it makes no difference whether we write `x >= 0` or `x > 0`. And the condition `x >= 0`, we can implement by simply checking whether the sign bit is zero. Whew! Okay, so we get:
 
-```
+```cpp
 __m128i mask = _mm_or_si128(_mm_or_si128(alpha, beta), gama));
 ```
 
 Now, how do we test the sign bit without using an extra instruction? Well, it turns out that the instruction we use to determine whether we should early\-out is `PTEST`, which already performs a binary AND. And it also turns out that the check we need \("are the sign bits set for all four lanes?"\) can be implemented using the very same instruction:
 
-```
+```cpp
 if(_mm_testc_si128(_mm_set1_epi32(0x80000000), mask))
 ```
 
 Note that the semantics of `mask` have changed, though: before, each SIMD lane held either the value 0 \("point outside triangle"\) or \-1 \("point inside triangle\). Now, it either holds a nonnegative value \(sign bit 0, "point inside triangle"\) or a negative one \(sign bit 1, "point outside triangle"\). The instructions that end up using this value only care about the sign bit, but still, we ended up exactly flipping which one indicates "inside" and which one means "outside". Lucky for us, that's easily remedied in the computation of `finalMask`, still only by changing ops without adding any:
 
-```
-__m128i finalMask = _mm_andnot_si128(mask,
-    _mm_castps_si128(depthMask));
+```cpp
+__m128i finalMask = _mm_andnot_si128(mask, _mm_castps_si128(depthMask));
 ```
 
 We simply use `andnot` instead of `and`. Okay, I admit that was a bit of trouble to get rid of a single instruction, but this *is* a tight inner loop that's not being slowed down by memory effects or other micro\-architectural issues. In short, this is one of the \(nowadays rare\) places where that kind of stuff actually matters. So, did it help?
@@ -201,19 +196,19 @@ Yes indeed: render time is down by 0.1ms \- about 4 standard deviations, a signi
 
 Next, we look at the second half of the loop, after the early\-out. This half is easier to find worthwhile targets in. Currently, we perform full barycentric interpolation to get the per\-pixel depth value:
 
-$$z = \alpha z_0 + \beta z_1 + \gamma z_2$$
+$$[z = \alpha z_0 + \beta z_1 + \gamma z_2$$]
 
 Now, as I mentioned at the end of ["The barycentric conspiracy"](*the-barycentric-conspirac), we can use the alternative form
 
-$$z = z_0 + \beta (z_1 - z_0) + \gamma (z_2 - z_0)$$
+$$[z = z_0 + \beta (z_1 - z_0) + \gamma (z_2 - z_0)$$]
 
 when the barycentric coordinates are normalized, or more generally
 
-$$\displaystyle z = z_0 + \beta \left(\frac{z_1 - z_0}{\alpha + \beta + \gamma}\right) + \gamma \left(\frac{z_2 - z_0}{\alpha + \beta + \gamma}\right)$$
+$$[ z = z_0 + \beta \left(\frac{z_1 - z_0}{\alpha + \beta + \gamma}\right) + \gamma \left(\frac{z_2 - z_0}{\alpha + \beta + \gamma}\right)$$]
 
 when they're not. And since the terms in parentheses are constants, we can compute them once, and get rid of a int\-to\-float conversion and a multiply in the inner loop \- two less instructions for a bit of extra setup work once per triangle. Namely, our per\-triangle setup computation goes from
 
-```
+```cpp
 __m128 oneOverArea = _mm_set1_ps(oneOverTriArea.m128_f32[lane]);
 zz[0] *= oneOverArea;
 zz[1] *= oneOverArea;
@@ -222,7 +217,7 @@ zz[2] *= oneOverArea;
 
 to
 
-```
+```cpp
 __m128 oneOverArea = _mm_set1_ps(oneOverTriArea.m128_f32[lane]);
 zz[1] = (zz[1] - zz[0]) * oneOverArea;
 zz[2] = (zz[2] - zz[0]) * oneOverArea;
@@ -230,7 +225,7 @@ zz[2] = (zz[2] - zz[0]) * oneOverArea;
 
 and our per\-pixel interpolation goes from
 
-```
+```cpp
 __m128 depth = _mm_mul_ps(_mm_cvtepi32_ps(alpha), zz[0]);
 depth = _mm_add_ps(depth, _mm_mul_ps(betaf, zz[1]));
 depth = _mm_add_ps(depth, _mm_mul_ps(gamaf, zz[2]));
@@ -238,7 +233,7 @@ depth = _mm_add_ps(depth, _mm_mul_ps(gamaf, zz[2]));
 
 to
 
-```
+```cpp
 __m128 depth = zz[0];
 depth = _mm_add_ps(depth, _mm_mul_ps(betaf, zz[1]));
 depth = _mm_add_ps(depth, _mm_mul_ps(gamaf, zz[2]));
@@ -274,24 +269,21 @@ Render time is down by about another 0.05ms, and the whole distribution has shif
 
 Finally, there's another place where we can make a difference by better instruction selection. Our current depth buffer update code looks as follows:
 
-```
+```cpp
     __m128 previousDepthValue = *(__m128*)&pDepthBuffer[idx];
 
     __m128 depthMask = _mm_cmpge_ps(depth, previousDepthValue);
-    __m128i finalMask = _mm_andnot_si128(mask,
-        _mm_castps_si128(depthMask));
+    __m128i finalMask = _mm_andnot_si128(mask, _mm_castps_si128(depthMask));
 
-    depth = _mm_blendv_ps(previousDepthValue, depth,
-        _mm_castsi128_ps(finalMask));
+    depth = _mm_blendv_ps(previousDepthValue, depth, _mm_castsi128_ps(finalMask));
 ```
 
 `finalMask` here is a mask that encodes "pixel lies inside the triangle AND has a larger depth value than the previous pixel at that location". The `blend` instruction then selects the new interpolated depth value for the lanes where `finalMask` has the sign bit \(MSB\) set, and the previous depth value elsewhere. But we can do slightly better, because SSE provides `MAXPS`, which directly computes the maximum of two floating\-point numbers. Using max, we can rewrite this expression to read:
 
-```
+```cpp
     __m128 previousDepthValue = *(__m128*)&pDepthBuffer[idx];
     __m128 mergedDepth = _mm_max_ps(depth, previousDepthValue);
-    depth = _mm_blendv_ps(mergedDepth, previousDepthValue,
-        _mm_castsi128_ps(mask));
+    depth = _mm_blendv_ps(mergedDepth, previousDepthValue, _mm_castsi128_ps(mask));
 ```
 
 This is a slightly different way to phrase the solution \- "pick whichever is largest of the previous and the interpolated depth value, and use that as new depth if this pixel is inside the triangle, or stick with the old depth otherwise" \- but it's equivalent, and we lose yet another instruction. And just as important on the notoriously register\-starved 32\-bit x86, it also needs one less temporary register.
@@ -334,7 +326,7 @@ Of course not. This is actually a common mistake people make during optimization
 
 So let's look at our row loop:
 
-```
+```cpp
 for(int r = startYy; r < endYy;
         r += 2,
         row  = _mm_add_epi32(row, _mm_set1_epi32(2)),
@@ -357,7 +349,7 @@ Okay, we don't even need to get fancy here \- there's two things that immediatel
 
 So before the loop, we add:
 
-```
+```cpp
     __m128i sum0Row = _mm_add_epi32(aa0Col, bb0Row);
     __m128i sum1Row = _mm_add_epi32(aa1Col, bb1Row);
     __m128i sum2Row = _mm_add_epi32(aa2Col, bb2Row);
@@ -365,7 +357,7 @@ So before the loop, we add:
 
 and then we change the row loop itself to read:
 
-```
+```cpp
 for(int r = startYy; r < endYy;
         r += 2,
         rowIdx = rowIdx + 2 * SCREENW,
