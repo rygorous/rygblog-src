@@ -22,6 +22,8 @@ Some readers have commented that this is a really low\-level description of the 
 * [Part 12](*a-trip-through-the-graphics-pipeline-2011-part-12): Tessellation.
 * [Part 13](*a-trip-through-the-graphics-pipeline-2011-part-13): Compute Shaders.
 
+Finally, if you prefer, you can also read the series [all at once](*collect_a-trip-through-the-graphics-pipeline-2011) collected into a single document, which is more suitable if you prefer to read long documents by printing them on paper.
+
   <a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">
     <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" style="border-style:none;" alt="CC0"/>
   </a>
