@@ -18,10 +18,10 @@ I've got one more: Let's go back to the first variant again. A nice property of 
 avg_pixel_a8r8g8b8(a,b) = (((a^b) >> 1) & 0x7f7f7f7f) + (a&b)
 ```
 
-In fact, why limit ourselves to 32\-bit values? It works just as well for two 32\-bit pixels inside a 64\-bit register, just use 0x7f7f7f7f7f7f7f7f as mask. Nor does it say anywhere that the fields all have to have to same size. The trick works just as well for uneven partitions like the 11:11:10 bit format often used to store vertex normals or other unit vectors, or R5G6B5 pixels. All that changes is the bit mask.
+In fact, why limit ourselves to 32\-bit values? It works just as well for two 32\-bit pixels inside a 64\-bit register, just use `0x7f7f7f7f7f7f7f7f` as mask. Nor does it say anywhere that the fields all have to have to same size. The trick works just as well for uneven partitions like the 11:11:10 bit format often used to store vertex normals or other unit vectors, or R5G6B5 pixels. All that changes is the bit mask.
 
-Finally, the bitpacked stuff and the rounding bias fix are orthogonal \- you can do both at the same time.
+Finally, the bitpacked stuff and the rounding bias fix are orthogonal---you can do both at the same time.
 
 Sure, this isn't *terribly* useful in practice, but it's come in handy for me a couple times over the past few years, and I think it's just fundamentally too *cool* not to have it properly documented.
 
-**UPDATE**: As Charles pointed out in the comments, a better way to compute \(a\+b\+1\)/2 is to use `(a | b) - ((a ^ b) >> 1)` \- just as cheap as the version without rounding bias, and you can do the same masking trick to get rid of carries where you don't want them.
+**UPDATE**: As Charles pointed out in the comments, a better way to compute \(a\+b\+1\)/2 is to use `(a | b) - ((a ^ b) >> 1)`---just as cheap as the version without rounding bias, and you can do the same masking trick to get rid of carries where you don't want them.
