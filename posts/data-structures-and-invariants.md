@@ -6,7 +6,7 @@ That's a mistake. Invariants are a very useful tool in practice, *if* you have a
 
 ### Example 1: A singly\-linked list.
 
-```
+```cpp
 struct ListNode {
   ListNode *next;
   // other data...
@@ -19,7 +19,7 @@ You should be familiar with this. A singly\-linked list is a very simple data st
 
 So what are the invariants? None, it turns out. If you have a pointer to the first element and every element has a pointer to the next element, you have a singly\-linked list. This makes singly\-linked list fairly easy to manipulate. For example, setting `head = head->next;` will remove the first element from the list. But actually, all you need to identify a singly\-linked list uniquely is a pointer to its first element. If you want an algorithm to work on all but the first element, you just pass `head->next` instead of `head` \(this is used heavily in functional languages\). There's no easy way to remove some element `x` from the list directly, but you can easily remove an element given its predecessor `p`: Just set `p->next = p->next->next;`. Adding a new element at the front is almost as simple, except we need to update two pointers instead of one:
 
-```
+```cpp
 void AddAtFront(ListNode *x)
 {
   x->next = head; // Next element is the previous head of the list
@@ -31,7 +31,7 @@ Adding a new node at the back, however, forces you to traverse the whole list fr
 
 ### Example 2a: A singly\-linked list with tail \(version 1\)
 
-```
+```cpp
 // ListNode as above
 ListNode *head = NULL; // We still keep the head pointer
 ListNode *tail = NULL; // And now a tail too
@@ -39,7 +39,7 @@ ListNode *tail = NULL; // And now a tail too
 
 How does this affect our algorithms? Working out the details, it turns out that the operations we discussed previously all get more complicated as a result of this addition:
 
-```
+```cpp
 void RemoveFirst()
 {
   head = head->next;
@@ -91,7 +91,7 @@ Also, there's two separate cases in our invariant: The `head == NULL` case is sp
 
 ### Example 2b: A singly\-linked list with tail \(version 2\)
 
-```
+```cpp
 // ListNode again the same
 ListNode *head = NULL;
 ListNode **tailNext = &head; // Instead of tail!
@@ -146,7 +146,7 @@ Which is a lot cleaner, even though IsValidNext is a tad more complicated than I
 
 I'm just gonna give you the declaration for now, and then we'll look right at the invariants we need to maintain:
 
-```
+```cpp
 struct DListNode {
   DListNode *prev, *next; // Our two links per node
   // ...payload here
@@ -168,7 +168,7 @@ There's two things to note about this: First, we now have one invariant *per ele
 
 ### Example 3a: A doubly\-linked list \("proper" version\)
 
-```
+```cpp
 // DListNode as above
 DListNode list; // Sentinel: init to list.next = list.prev = &list;
 ```
@@ -179,7 +179,7 @@ Now, what are the invariants here? Let's see:
 
 And that's it. No special rules for the first or last elements and no special case for the empty list. We still have one invariant per element, but that's all invariants we need to maintain. The corresponding code is very clean, too:
 
-```
+```cpp
 bool IsEmpty() // Just for illustration
 {
   return list.next == &list;
