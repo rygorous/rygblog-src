@@ -1,0 +1,3 @@
+-title=Launch
+-time=2009-10-04 11:36:55
+There goes, yet another blog. After realizing that I missed technical writing after finishing my diploma thesis \(and with lots of interesting tidbits but nothing to make a paper out of\), it seemed like a good idea. No particular agenda, I'll just keep writing about whatever's on my mind at the time, and revisit some of my older stuff if there's nothing in particular.
