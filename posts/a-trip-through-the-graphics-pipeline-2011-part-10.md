@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 10
 -time=2011-07-20 10:18:11
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 Welcome back. Last time, we dove into bottom end of the pixel pipeline. This time, we'll switch back to the middle of the pipeline to look at what is probably the most visible addition that came with D3D10: Geometry Shaders. But first, some more words on how I decompose the graphics pipeline in this series, and how that's different from the view the APIs will present to you.
 

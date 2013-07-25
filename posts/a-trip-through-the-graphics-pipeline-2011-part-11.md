@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 11
 -time=2011-08-15 00:46:13
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 Welcome back! This time, the focus is going to be on Stream\-Out \(SO\). This is a facility for storing the Output of the Geometry Shader stage to memory, instead of sending it down the rest of the pipeline. This can be used to e.g. cache skinned vertex data, or as a sort of poor man's Compute Shader on D3D10\-level hardware using the D3D10 API \(note that with D3D11, you can just use CS 4.0, even on D3D10 hardware\). And just like the GS Instancing I mentioned last time, some of this is very poorly described in the API docs, so I'll have a few comments about API usage even though it's technically out of the intended scope of this series.
 

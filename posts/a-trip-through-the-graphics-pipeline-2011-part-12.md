@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 12
 -time=2011-09-06 08:38:29
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 Welcome back! This time, we'll look into what is perhaps the "poster boy" feature introduced with the D3D11 / Shader 5.x hardware generation: Tessellation. This one is interesting both because it's a fun topic, and because it marks the first time in a long while that a significant user\-visible component has been added to the graphics pipeline that's not programmable.
 

@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 4
 -time=2011-07-04 07:24:22
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 Welcome back. Last part was about vertex shaders, with some coverage of GPU shader units in general. Mostly, they're just vector processors, but they have access to one resource that doesn't exist in other vector architectures: Texture samplers. They're an integral part of the GPU pipeline and are complicated \(and interesting!\) enough to warrant their own article, so here goes.
 

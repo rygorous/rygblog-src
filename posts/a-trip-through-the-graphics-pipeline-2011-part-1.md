@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 1
 -time=2011-07-01 09:46:55
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 It's been awhile since I posted something here, and I figured I might use this spot to explain some general points about graphics hardware and software as of 2011; you can find functional descriptions of what the graphics stack in your PC does, but usually not the "how" or "why"; I'll try to fill in the blanks without getting too specific about any particular piece of hardware. I'm going to be mostly talking about DX11\-class hardware running D3D9/10/11 on Windows, because that happens to be the \(PC\) stack I'm most familiar with \- not that the API details etc. will matter much past this first part; once we're actually on the GPU it's all native commands.
 

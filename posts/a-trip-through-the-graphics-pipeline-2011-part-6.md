@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 6
 -time=2011-07-06 11:22:29
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 Welcome back. This time we're actually gonna see triangles being rasterized \- finally! But before we can rasterize triangles, we need to do triangle setup, and before I can discuss triangle setup, I need to explain what we're setting things up *for*; in other words, let's talk hardware\-friendly triangle rasterization algorithms.
 

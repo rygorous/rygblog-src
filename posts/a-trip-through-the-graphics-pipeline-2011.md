@@ -1,4 +1,4 @@
--title=A trip through the Graphics Pipeline 2011: Index
+-title=A trip through the Graphics Pipeline 2011
 -time=2011-07-09 09:31:35
 Welcome.
 

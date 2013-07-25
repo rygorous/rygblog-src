@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 3
 -time=2011-07-03 12:43:12
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 At this point, we've sent draw calls down from our app all the way through various driver layers and the command processor; now, *finally* we're actually going to do some graphics processing on it! In this part, I'll look at the vertex pipeline. But before we start...
 

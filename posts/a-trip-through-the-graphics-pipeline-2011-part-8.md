@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 8
 -time=2011-07-10 13:07:47
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 In this part, I'll be dealing with the first half of pixel processing: dispatch and actual pixel shading. In fact, this is really what most graphics programmer think about when talking about pixel processing; the alpha blend and late Z stages we'll encounter in the next part seem like little more than an afterthought. In hardware, the story is a bit more complicated, as we'll see \- there's a reason I'm splitting pixel processing into two parts. But I'm getting ahead of myself. At the point where we're entering this stage, the coordinates of pixels \(or, actually, quads\) to shade, plus associated coverage masks, arrive from the rasterizer/early\-Z unit \- with triangle in the exact same order as submitted by the application, as I pointed out last time. What we need to do here is to take that linear, sequential stream of work and farm it out to hundreds of shader units, then once the results are back, we need to merge it back into one linear stream of memory updates.
 

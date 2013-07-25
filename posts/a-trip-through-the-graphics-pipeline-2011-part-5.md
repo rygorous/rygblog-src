@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 5
 -time=2011-07-05 08:23:53
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 After the last post about texture samplers, we're now back in the 3D frontend. We're done with vertex shading, so now we can start actually rendering stuff, right? Well, not quite. You see, there's a bunch still left to do before we actually start rasterizing primitives. So much so in fact that we're not going to see any rasterization in this post \- that'll have to wait until next time.
 

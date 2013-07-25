@@ -1,6 +1,6 @@
+-parent=a-trip-through-the-graphics-pipeline-2011
 -title=A trip through the Graphics Pipeline 2011, part 9
 -time=2011-07-12 11:18:48
-*This post is part of the series ["A trip through the Graphics Pipeline 2011"](*a-trip-through-the-graphics-pipeline-2011-index).*
 
 Welcome back! This post deals with the second half of pixel processing, the "join phase". The previous phase was all about taking a small number of input streams and turning them into lots of independent tasks for the shader units. Now we need to fold that large number of independent computations back into one \(correctly ordered\) stream of memory operations. As I already did in the posts on rasterization and early Z, I'll first give a quick description of what needs to be done on a general level, and then I'll go into how this is mapped to hardware.
 
