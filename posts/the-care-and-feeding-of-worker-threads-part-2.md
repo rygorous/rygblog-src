@@ -10,9 +10,10 @@ But first, it's time to look at a bug that I inadvertently introduced last time:
 
 The issue turned out to be that the `IsTooSmall` computation for occluders, which we moved from the "vertex transform" to the "frustum cull" pass last time, used stale information. The relevant piece of the main loop is this:
 
-<pre>mpCamera-&gt;SetNearPlaneDistance(1.0f);
-mpCamera-&gt;SetFarPlaneDistance(gFarClipDistance);
-mpCamera-&gt;Update();
+```{cpp highlight=24}
+mpCamera->SetNearPlaneDistance(1.0f);
+mpCamera->SetFarPlaneDistance(gFarClipDistance);
+mpCamera->Update();
 
 // If view frustum culling is enabled then determine which occluders
 // and occludees are inside the view frustum and run the software
@@ -20,29 +21,28 @@ mpCamera-&gt;Update();
 if(mEnableFCulling)
 {
     renderParams.mpCamera = mpCamera;
-    mpDBR-&gt;IsVisible(mpCamera);
-    mpAABB-&gt;IsInsideViewFrustum(mpCamera);
+    mpDBR->IsVisible(mpCamera);
+    mpAABB->IsInsideViewFrustum(mpCamera);
 }
 
 // if software occlusion culling is enabled
 if(mEnableCulling)
 {
-    mpCamera-&gt;SetNearPlaneDistance(gFarClipDistance);
-    mpCamera-&gt;SetFarPlaneDistance(1.0f);
-    mpCamera-&gt;Update();
+    mpCamera->SetNearPlaneDistance(gFarClipDistance);
+    mpCamera->SetFarPlaneDistance(1.0f);
+    mpCamera->Update();
 
     // Set the camera transforms so that the occluders can
     // be transformed 
-<span style="color:#c11;">    mpDBR-&gt;SetViewProj(mpCamera-&gt;GetViewMatrix(),
-        (float4x4*)mpCamera-&gt;GetProjectionMatrix());</span>
+    mpDBR->SetViewProj(mpCamera->GetViewMatrix(), (float4x4*)mpCamera->GetProjectionMatrix());
 
     // (clear, render depth and perform occlusion test here)
 
-    mpCamera-&gt;SetNearPlaneDistance(1.0f);
-    mpCamera-&gt;SetFarPlaneDistance(gFarClipDistance);
-    mpCamera-&gt;Update();
+    mpCamera->SetNearPlaneDistance(1.0f);
+    mpCamera->SetFarPlaneDistance(gFarClipDistance);
+    mpCamera->Update();
 }
-</pre>
+```
 
 Note how the call that actually updates the view\-projection matrix \(highlighted in red\) runs *after* the frustum\-culling pass. That's the bug I was running into. Fixing this bug is almost as simple as moving that call up \(to before the frustum culling pass\), but another wrinkle is that the depth\-buffer pass uses an inverted Z\-buffer with Z=0 at the *far* plane and Z=1 at the near plane \- note the calls that swap the positions of the camera "near" and "far" planes before depth buffer rendering, and the ones that swap it back after. There's [good reasons](http://www.humus.name/index.php?ID=255) for doing this, particularly if the depth buffer uses floats \(as it does in our implementation\). But to simplify matters here, I changed the code to do the swapping as part of the viewport transform instead, which means there's no need to be modifying the camera/projection setup during the frame at all. This keeps the code simpler and also makes it easy to move the `SetViewProj` call to before the frustum culling pass, where it should be now that we're using these matrices earlier.
 
@@ -170,10 +170,11 @@ At this point, we're in pretty good shape as far as worker thread utilization is
 
 Clearing the depth buffer. This is about 0.4ms, about a third of the time we spend depth testing, all tracing back to a single line in the code:
 
-<pre>    // Clear the depth buffer
+```{cpp highlight=3}
+    // Clear the depth buffer
     mpCPURenderTargetPixels = (UINT*)mpCPUDepthBuf;
-    <span style="color:#c11;">memset(mpCPURenderTargetPixels, 0, SCREENW * SCREENH * 4);</span>
-</pre>
+    memset(mpCPURenderTargetPixels, 0, SCREENW * SCREENH * 4);
+```
 
 Luckily, this one's really easy to fix. We could try and turn this into another separate group of tasks, but there's no need: we already have a pass that chops up the screen into several smaller pieces, namely the actual rasterization which works one tile at a time. And neither the vertex transform nor the binner that run before it actually care about the contents of the depth buffer. So we just clear one tile at a time, from the rasterizer code. As a bonus, this means that the active tile gets "pre\-loaded" into the current core's L2 cache before we start rendering. I'm not going to bother walking through the code here \- it's simple enough \- but as usual, I'll give you the results:
 
